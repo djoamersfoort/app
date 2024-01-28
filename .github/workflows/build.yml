@@ -1,10 +1,9 @@
 name: "Build and Deploy"
 on:
   push:
-    branches:
-      - main
-env:
-  build_flags:
+    tags:
+      - v*
+
 jobs:
   build:
     runs-on: macos-13
