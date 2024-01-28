@@ -37,7 +37,7 @@
     "android": {
       "package": "nl.djoamersfoort.djo",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#202088"
       }
     },
