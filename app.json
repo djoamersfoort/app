@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#202088"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -29,13 +29,16 @@
         "UIBackgroundModes": [
           "remote-notification"
         ],
-        "LSApplicationQueriesSchemes": ["djo"]
+        "LSApplicationQueriesSchemes": [
+          "djo"
+        ]
       }
     },
     "android": {
+      "package": "nl.djoamersfoort.djo",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#202088"
       }
     },
     "web": {
