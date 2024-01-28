@@ -29,6 +29,8 @@ import Constants from "expo-constants";
 import { useEffect, useRef, useState } from "react";
 import Media from "./src/media/media.jsx";
 import * as Linking from "expo-linking";
+import {useAtom} from "jotai";
+import {doneAtom, refreshingAtom} from "./src/feed/refresh";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -114,9 +116,9 @@ const prefix = Linking.createURL('/');
 
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState("");
-  const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
-  const responseListener = useRef();
+  const [refreshing, setRefreshing] = useAtom(refreshingAtom);
+  const [_done, setDone] = useAtom(doneAtom);
 
   const linking = {
     prefixes: [prefix],
@@ -128,8 +130,11 @@ export default function App() {
     );
 
     notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
+      Notifications.addNotificationResponseReceivedListener(() => {
+        if (refreshing) return;
+
+        setDone(0);
+        setRefreshing(true);
       });
 
     return () => {
