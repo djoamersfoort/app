@@ -37,5 +37,4 @@ jobs:
           packageName: nl.djoamersfoort.djo
           releaseFiles: ./android.aab
           track: production
-          status: inProgress
           changesNotSentForReview: true
