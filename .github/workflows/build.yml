@@ -4,7 +4,7 @@ on:
     tags:
       - v*
 env:
-  EAS_BUILD_ARGS = --non-interactive --profile production --local
+  EAS_BUILD_ARGS: --non-interactive --profile production --local
 
 jobs:
   build:
