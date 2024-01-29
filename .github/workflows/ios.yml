@@ -1,0 +1,39 @@
+name: "Build and Deploy"
+on:
+  push:
+    tags:
+      - v*
+env:
+  EAS_BUILD_ARGS: --non-interactive --profile production --local
+
+jobs:
+  build:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.x'
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v7
+        with:
+          token: ${{ secrets.EXPO_TOKEN }}
+          expo-version: latest
+          eas-version: latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app for IOS
+        run: eas build --output ./app.ipa --platform ios ${{ env.EAS_BUILD_ARGS }}
+
+      - name: Upload to App Store Connect
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: './app.ipa'
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
