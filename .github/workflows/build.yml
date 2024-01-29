@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - v*
+env:
+  EAS_BUILD_ARGS = --non-interactive --profile production --local
 
 jobs:
   build:
@@ -25,8 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build App
-        run: eas build --output ./app.ipa --platform ios --non-interactive --profile production --local
+      - name: Build app for IOS
+        run: eas build --output ./app.ipa --platform ios ${{ env.EAS_BUILD_ARGS }}
+
+      - name: Build app for Android
+        run: eas build --output ./android.aab --platform android ${{ env.EAS_BUILD_ARGS }}
 
       - name: Upload to App Store Connect
         uses: apple-actions/upload-testflight-build@v1
@@ -35,3 +40,13 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Upload to Google Play Console
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: nl.djoamersfoort.djo
+          releaseFiles: ./android.aab
+          track: production
+          status: inProgress
+          changesNotSentForReview: true
