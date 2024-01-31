@@ -42,4 +42,4 @@ jobs:
           packageName: nl.djoamersfoort.djo
           releaseFiles: ./android.aab
           track: beta
-          changesNotSentForReview: true
+          changesNotSentForReview: false
