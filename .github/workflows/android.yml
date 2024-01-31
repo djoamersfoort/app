@@ -41,5 +41,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: nl.djoamersfoort.djo
           releaseFiles: ./android.aab
-          track: production
+          track: beta
           changesNotSentForReview: true
