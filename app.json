@@ -16,9 +16,9 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "2",
       "userInterfaceStyle": "automatic",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
       "config": {
         "usesNonExemptEncryption": false

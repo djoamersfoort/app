@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch: { }
+
 env:
   EAS_BUILD_ARGS: --non-interactive --profile production --local
 
