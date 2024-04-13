@@ -88,7 +88,10 @@ async function registerForPushNotifications(user: AuthenticatedState) {
         return
     }
 
-    const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId: Constants.extra.eas.projectId })
+    const config = Constants.expoConfig
+    if (!config) return
+
+    const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId: config.extra?.eas.projectId })
     await fetch('https://leden.djoamersfoort.nl/notifications/token', {
         method: 'POST',
         headers: {
