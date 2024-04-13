@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "djo",
+    "slug": "djo",
+    "scheme": "djo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#202088"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "buildNumber": "1",
+      "userInterfaceStyle": "automatic",
+      "supportsTablet": true,
+      "bundleIdentifier": "nl.djoamersfoort.djo",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "LSApplicationQueriesSchemes": [
+          "djo"
+        ]
+      }
+    },
+    "android": {
+      "package": "nl.djoamersfoort.djo",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#202088"
+      },
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 3
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allows you to upload media",
+          "cameraPermission": "Allows you to upload media",
+          "microphonePermission": "Allows you to upload media"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b244a444-1aac-455c-93bf-119317e041fd"
+      }
+    }
+  }
+}
