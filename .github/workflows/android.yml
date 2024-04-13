@@ -43,4 +43,3 @@ jobs:
           releaseFiles: ./android.aab
           track: production
           status: draft
-          changesNotSentForReview: true
