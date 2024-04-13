@@ -30,7 +30,7 @@ jobs:
           eas-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: npx expo install
 
       - name: Build app for Android
         run: eas build --output ./android.aab --platform android ${{ env.EAS_BUILD_ARGS }}
