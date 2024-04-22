@@ -18,6 +18,8 @@ import merge from 'deepmerge'
 import WebScreen from "./src/screens/web";
 import * as Notifications from 'expo-notifications'
 import SearchScreen from "./src/screens/feed/search";
+import { Item as InventoryItem } from './src/screens/feed/search'
+import ItemScreen from "./src/screens/feed/item";
 
 Notifications.setNotificationHandler(({
     handleNotification: async () => ({
@@ -36,7 +38,8 @@ export type StackParamList = {
     Album: { album: string, title: string },
     Slides: { items: Item[], item: number },
     Web: { source: string, title: string },
-    Search: undefined
+    Search: undefined,
+    Item: { item: InventoryItem, title: string }
 }
 
 
@@ -78,6 +81,9 @@ export default function App() {
                         <Stack.Screen name={"Search"} component={SearchScreen} options={{
                             headerShown: false
                         }} />
+                        <Stack.Screen name={"Item"} component={ItemScreen} options={({ route }) => ({
+                            title: route.params.title
+                        })} />
                     </Stack.Navigator>
                 </AuthProvider>
             </PaperProvider>

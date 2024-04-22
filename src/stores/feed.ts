@@ -1,9 +1,11 @@
 import {atom} from "jotai";
 import {parse} from "rss-to-json";
+import {Item} from "../screens/feed/search";
 
 export enum ActionType {
     LINK,
-    VIEW
+    VIEW,
+    ITEM
 }
 interface LinkAction {
     type: ActionType.LINK
@@ -13,7 +15,11 @@ interface ViewAction {
     type: ActionType.VIEW
     source: string
 }
-export type Action = LinkAction | ViewAction
+interface ItemAction {
+    type: ActionType.ITEM,
+    item: Item
+}
+export type Action = LinkAction | ViewAction | ItemAction
 
 export interface FeedItem {
     icon: string

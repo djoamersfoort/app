@@ -6,7 +6,7 @@ import {ActionType, FeedItem} from "../../stores/feed";
 import Item from "../../components/feed/item";
 import { parse } from 'fast-html-parser'
 
-interface Item {
+export interface Item {
     id: number,
     name: string,
     description: string,
@@ -39,8 +39,8 @@ async function getItems(query: string) {
         description: item.location_description,
         icon: 'package-variant-closed',
         action: {
-            type: ActionType.LINK,
-            href: 'https://djoamersfoort.nl'
+            type: ActionType.ITEM,
+            item
         }
     } as FeedItem))
 }
