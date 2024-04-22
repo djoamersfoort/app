@@ -19,6 +19,11 @@ export default function Item({ item }: { item: FeedItem }) {
             }
             case ActionType.VIEW: {
                 navigation.navigate('Web', { source: item.action.source, title: item.title })
+                break
+            }
+            case ActionType.ITEM: {
+                navigation.navigate('Item', { item: item.action.item, title: item.title })
+                break
             }
         }
     }
