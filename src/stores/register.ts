@@ -1,24 +1,27 @@
-import { atom } from "jotai"
+import { atom } from "jotai";
 
 export interface Slot {
-    name: string
-    pod: string
-    description: string
-    tutors: string[]
+  name: string;
+  pod: string;
+  description: string;
+  announcement: string;
+  tutors: string[];
 
-    available: number
-    taken: number
-    is_registered: boolean
-
+  available: number;
+  taken: number;
+  is_registered: boolean;
 }
 
-export const slotsAtom = atom<Slot[]>([])
+export const slotsAtom = atom<Slot[] | null>(null);
 export async function getSlots(token: string) {
-    const { slots }: { slots: Slot[] } = await fetch('https://aanmelden.djoamersfoort.nl/api/v1/slots', {
-        headers: {
-            authorization: `Bearer ${token}`
-        }
-    }).then(res => res.json())
+  const { slots }: { slots: Slot[] } = await fetch(
+    "https://aanmelden.djoamersfoort.nl/api/v1/slots",
+    {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    },
+  ).then((res) => res.json());
 
-    return slots
+  return slots;
 }
