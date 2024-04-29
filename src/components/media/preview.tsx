@@ -1,4 +1,4 @@
-import { AlbumList } from "../../__generated__/media";
+import { AlbumList, SmoelAlbumList } from "../../__generated__/media";
 import { Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
@@ -7,16 +7,25 @@ import { StackParamList } from "../../../App";
 
 type NavigationProps = NativeStackNavigationProp<StackParamList>;
 
-export default function Preview({ album }: { album: AlbumList }) {
+export default function Preview({
+  album,
+  mode,
+}: {
+  album: AlbumList | SmoelAlbumList;
+  mode: "smoel" | "album";
+}) {
   const navigation = useNavigation<NavigationProps>();
 
+  function navigate() {
+    if (mode === "album") {
+      navigation.navigate("Album", { album: album.id, title: album.name });
+    } else {
+      navigation.navigate("Smoel", { smoel: album.id, title: album.name });
+    }
+  }
+
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() =>
-        navigation.navigate("Album", { album: album.id, title: album.name })
-      }
-    >
+    <TouchableOpacity style={styles.container} onPress={navigate}>
       <Image source={{ uri: album.preview?.cover_path }} style={styles.image} />
       <Text variant={"titleSmall"}>{album.name}</Text>
     </TouchableOpacity>

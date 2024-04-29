@@ -2,15 +2,22 @@ import { useContext, useEffect, useState } from "react";
 import AuthContext, { Authed } from "../../auth";
 import { useAtom } from "jotai";
 import { apiAtom, getApi } from "../../stores/media";
-import { AlbumList } from "../../__generated__/media";
-import { FlatList, StyleSheet, View } from "react-native";
-import Preview from "../../components/media/preview";
-import { Appbar, Button, Text } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { Appbar, SegmentedButtons } from "react-native-paper";
+import { useTheme } from "@react-navigation/native";
+import Albums from "../../components/media/albums";
+import Smoelen from "../../components/media/smoelen";
+
+enum Page {
+  ALBUMS = "albums",
+  SMOELEN = "smoelen",
+}
 
 export default function MediaScreen() {
   const authState = useContext(AuthContext);
   const [api, setApi] = useAtom(apiAtom);
-  const [albums, setAlbums] = useState<AlbumList[]>([]);
+  const [page, setPage] = useState<Page>(Page.ALBUMS);
+  const theme = useTheme();
 
   useEffect(() => {
     if (authState.authenticated !== Authed.AUTHENTICATED) {
@@ -21,39 +28,32 @@ export default function MediaScreen() {
       setApi(getApi(token));
     });
   }, [authState]);
-  useEffect(() => {
-    async function getAlbums() {
-      if (!api) return;
-
-      const { data: albums } = await api.albums.getAlbums();
-      setAlbums(albums.sort((a, b) => a.order - b.order));
-    }
-
-    getAlbums().then();
-  }, [api]);
 
   return (
     <>
       <Appbar.Header>
         <Appbar.Content title={"Media"} />
       </Appbar.Header>
-      {authState.authenticated === Authed.GUEST && (
-        <View style={styles.unauthenticated}>
-          <Text>Je moet eerst inloggen om deze pagina te bekijken</Text>
-          <Button mode={"contained-tonal"} onPress={authState.login}>
-            Log in
-          </Button>
-        </View>
-      )}
-      {authState.authenticated === Authed.AUTHENTICATED && (
-        <FlatList
-          style={{ margin: 5 }}
-          data={albums}
-          numColumns={2}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <Preview album={item} />}
-        />
-      )}
+      {page === Page.ALBUMS && <Albums />}
+      {page === Page.SMOELEN && <Smoelen />}
+      <SegmentedButtons
+        style={{
+          ...styles.pageSelector,
+          backgroundColor: theme.colors.background,
+        }}
+        value={page}
+        onValueChange={(page) => setPage(page as Page)}
+        buttons={[
+          {
+            value: Page.ALBUMS,
+            label: "Albums",
+          },
+          {
+            value: Page.SMOELEN,
+            label: "Smoelen ✨",
+          },
+        ]}
+      />
     </>
   );
 }
@@ -66,5 +66,11 @@ const styles = StyleSheet.create({
     gap: 5,
     padding: 20,
     textAlign: "center",
+  },
+  pageSelector: {
+    position: "absolute",
+    bottom: 0,
+    margin: 15,
+    borderRadius: 50,
   },
 });
