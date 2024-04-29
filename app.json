@@ -16,7 +16,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "2",
       "userInterfaceStyle": "automatic",
       "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
@@ -39,7 +39,7 @@
         "backgroundColor": "#202088"
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 4
+      "versionCode": 5
     },
     "web": {
       "favicon": "./assets/favicon.png"
