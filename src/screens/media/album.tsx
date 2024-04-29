@@ -11,7 +11,7 @@ import { useAtom } from "jotai";
 import { apiAtom } from "../../stores/media";
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
-import { ActivityIndicator, Appbar, Text } from "react-native-paper";
+import { ActivityIndicator, Appbar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { NativeStackNavigationEventMap } from "react-native-screens/lib/typescript/native-stack/types";

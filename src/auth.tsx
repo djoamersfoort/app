@@ -5,7 +5,7 @@ import * as AuthSession from "expo-auth-session";
 import { Alert, Platform, SafeAreaView, StyleSheet, View } from "react-native";
 import { Button, useTheme, Text, ActivityIndicator } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
-import { DiscoveryDocument, TokenError } from "expo-auth-session";
+import { DiscoveryDocument } from "expo-auth-session";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";

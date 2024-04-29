@@ -1,5 +1,5 @@
 import { AlbumList, SmoelAlbumList } from "../../__generated__/media";
-import { Image, StyleSheet, TouchableOpacity } from "react-native";
+import { Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
