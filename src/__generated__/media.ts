@@ -180,16 +180,22 @@ export interface FullRequestParams extends Omit<RequestInit, "body"> {
   cancelToken?: CancelToken;
 }
 
-export type RequestParams = Omit<FullRequestParams, "body" | "method" | "query" | "path">;
+export type RequestParams = Omit<
+  FullRequestParams,
+  "body" | "method" | "query" | "path"
+>;
 
 export interface ApiConfig<SecurityDataType = unknown> {
   baseUrl?: string;
   baseApiParams?: Omit<RequestParams, "baseUrl" | "cancelToken" | "signal">;
-  securityWorker?: (securityData: SecurityDataType | null) => Promise<RequestParams | void> | RequestParams | void;
+  securityWorker?: (
+    securityData: SecurityDataType | null,
+  ) => Promise<RequestParams | void> | RequestParams | void;
   customFetch?: typeof fetch;
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
+export interface HttpResponse<D extends unknown, E extends unknown = unknown>
+  extends Response {
   data: D;
   error: E;
 }
@@ -208,7 +214,8 @@ export class HttpClient<SecurityDataType = unknown> {
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private abortControllers = new Map<CancelToken, AbortController>();
-  private customFetch = (...fetchParams: Parameters<typeof fetch>) => fetch(...fetchParams);
+  private customFetch = (...fetchParams: Parameters<typeof fetch>) =>
+    fetch(...fetchParams);
 
   private baseApiParams: RequestParams = {
     credentials: "same-origin",
@@ -241,10 +248,16 @@ export class HttpClient<SecurityDataType = unknown> {
 
   protected toQueryString(rawQuery?: QueryParamsType): string {
     const query = rawQuery || {};
-    const keys = Object.keys(query).filter((key) => "undefined" !== typeof query[key]);
+    const keys = Object.keys(query).filter(
+      (key) => "undefined" !== typeof query[key],
+    );
     return keys
-        .map((key) => (Array.isArray(query[key]) ? this.addArrayQueryParam(query, key) : this.addQueryParam(query, key)))
-        .join("&");
+      .map((key) =>
+        Array.isArray(query[key])
+          ? this.addArrayQueryParam(query, key)
+          : this.addQueryParam(query, key),
+      )
+      .join("&");
   }
 
   protected addQueryParams(rawQuery?: QueryParamsType): string {
@@ -254,25 +267,33 @@ export class HttpClient<SecurityDataType = unknown> {
 
   private contentFormatters: Record<ContentType, (input: any) => any> = {
     [ContentType.Json]: (input: any) =>
-        input !== null && (typeof input === "object" || typeof input === "string") ? JSON.stringify(input) : input,
-    [ContentType.Text]: (input: any) => (input !== null && typeof input !== "string" ? JSON.stringify(input) : input),
+      input !== null && (typeof input === "object" || typeof input === "string")
+        ? JSON.stringify(input)
+        : input,
+    [ContentType.Text]: (input: any) =>
+      input !== null && typeof input !== "string"
+        ? JSON.stringify(input)
+        : input,
     [ContentType.FormData]: (input: any) =>
-        Object.keys(input || {}).reduce((formData, key) => {
-          const property = input[key];
-          formData.append(
-              key,
-              property instanceof Blob
-                  ? property
-                  : typeof property === "object" && property !== null
-                      ? JSON.stringify(property)
-                      : `${property}`,
-          );
-          return formData;
-        }, new FormData()),
+      Object.keys(input || {}).reduce((formData, key) => {
+        const property = input[key];
+        formData.append(
+          key,
+          property instanceof Blob
+            ? property
+            : typeof property === "object" && property !== null
+              ? JSON.stringify(property)
+              : `${property}`,
+        );
+        return formData;
+      }, new FormData()),
     [ContentType.UrlEncoded]: (input: any) => this.toQueryString(input),
   };
 
-  protected mergeRequestParams(params1: RequestParams, params2?: RequestParams): RequestParams {
+  protected mergeRequestParams(
+    params1: RequestParams,
+    params2?: RequestParams,
+  ): RequestParams {
     return {
       ...this.baseApiParams,
       ...params1,
@@ -285,7 +306,9 @@ export class HttpClient<SecurityDataType = unknown> {
     };
   }
 
-  protected createAbortSignal = (cancelToken: CancelToken): AbortSignal | undefined => {
+  protected createAbortSignal = (
+    cancelToken: CancelToken,
+  ): AbortSignal | undefined => {
     if (this.abortControllers.has(cancelToken)) {
       const abortController = this.abortControllers.get(cancelToken);
       if (abortController) {
@@ -309,54 +332,65 @@ export class HttpClient<SecurityDataType = unknown> {
   };
 
   public request = async <T = any, E = any>({
-                                              body,
-                                              secure,
-                                              path,
-                                              type,
-                                              query,
-                                              format,
-                                              baseUrl,
-                                              cancelToken,
-                                              ...params
-                                            }: FullRequestParams): Promise<HttpResponse<T, E>> => {
+    body,
+    secure,
+    path,
+    type,
+    query,
+    format,
+    baseUrl,
+    cancelToken,
+    ...params
+  }: FullRequestParams): Promise<HttpResponse<T, E>> => {
     const secureParams =
-        ((typeof secure === "boolean" ? secure : this.baseApiParams.secure) &&
-            this.securityWorker &&
-            (await this.securityWorker(this.securityData))) ||
-        {};
+      ((typeof secure === "boolean" ? secure : this.baseApiParams.secure) &&
+        this.securityWorker &&
+        (await this.securityWorker(this.securityData))) ||
+      {};
     const requestParams = this.mergeRequestParams(params, secureParams);
     const queryString = query && this.toQueryString(query);
     const payloadFormatter = this.contentFormatters[type || ContentType.Json];
     const responseFormat = format || requestParams.format;
 
-    return this.customFetch(`${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`, {
-      ...requestParams,
-      headers: {
-        ...(requestParams.headers || {}),
-        ...(type && type !== ContentType.FormData ? { "Content-Type": type } : {}),
+    return this.customFetch(
+      `${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`,
+      {
+        ...requestParams,
+        headers: {
+          ...(requestParams.headers || {}),
+          ...(type && type !== ContentType.FormData
+            ? { "Content-Type": type }
+            : {}),
+        },
+        signal:
+          (cancelToken
+            ? this.createAbortSignal(cancelToken)
+            : requestParams.signal) || null,
+        body:
+          typeof body === "undefined" || body === null
+            ? null
+            : payloadFormatter(body),
       },
-      signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
-      body: typeof body === "undefined" || body === null ? null : payloadFormatter(body),
-    }).then(async (response) => {
+    ).then(async (response) => {
       const r = response as HttpResponse<T, E>;
       r.data = null as unknown as T;
       r.error = null as unknown as E;
 
       const data = !responseFormat
-          ? r
-          : await response[responseFormat]()
-              .then((data) => {
-                if (r.ok) {
-                  r.data = data;
-                } else {
-                  r.error = data;
-                }
-                return r;
-              })
-              .catch((e) => {
-                r.error = e;
-                return r;
-              });
+        ? r
+        : await response[responseFormat]()
+            .then((data) => {
+              if (r.ok) {
+                r.data = data;
+              } else {
+                r.error = data;
+              }
+              return r;
+            })
+            .catch((e) => {
+              r.error = e;
+              return r;
+            });
 
       if (cancelToken) {
         this.abortControllers.delete(cancelToken);
@@ -372,7 +406,9 @@ export class HttpClient<SecurityDataType = unknown> {
  * @title FastAPI
  * @version 0.1.0
  */
-export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+export class Api<
+  SecurityDataType extends unknown,
+> extends HttpClient<SecurityDataType> {
   albums = {
     /**
      * No description
@@ -383,13 +419,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     getAlbums: (params: RequestParams = {}) =>
-        this.request<AlbumList[], any>({
-          path: `/albums`,
-          method: "GET",
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<AlbumList[], any>({
+        path: `/albums`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -400,15 +436,15 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     createAlbum: (data: AlbumCreate, params: RequestParams = {}) =>
-        this.request<AlbumList, HTTPValidationError>({
-          path: `/albums`,
-          method: "POST",
-          body: data,
-          secure: true,
-          type: ContentType.Json,
-          format: "json",
-          ...params,
-        }),
+      this.request<AlbumList, HTTPValidationError>({
+        path: `/albums`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -419,15 +455,15 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     orderAlbums: (data: AlbumOrder[], params: RequestParams = {}) =>
-        this.request<AlbumList[], HTTPValidationError>({
-          path: `/albums`,
-          method: "PATCH",
-          body: data,
-          secure: true,
-          type: ContentType.Json,
-          format: "json",
-          ...params,
-        }),
+      this.request<AlbumList[], HTTPValidationError>({
+        path: `/albums`,
+        method: "PATCH",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -438,13 +474,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     getAlbum: (albumId: string, params: RequestParams = {}) =>
-        this.request<Album, HTTPValidationError>({
-          path: `/albums/${albumId}`,
-          method: "GET",
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<Album, HTTPValidationError>({
+        path: `/albums/${albumId}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -454,16 +490,20 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request PATCH:/albums/{album_id}
      * @secure
      */
-    updateAlbum: (albumId: string, data: AlbumCreate, params: RequestParams = {}) =>
-        this.request<Album, HTTPValidationError>({
-          path: `/albums/${albumId}`,
-          method: "PATCH",
-          body: data,
-          secure: true,
-          type: ContentType.Json,
-          format: "json",
-          ...params,
-        }),
+    updateAlbum: (
+      albumId: string,
+      data: AlbumCreate,
+      params: RequestParams = {},
+    ) =>
+      this.request<Album, HTTPValidationError>({
+        path: `/albums/${albumId}`,
+        method: "PATCH",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -474,24 +514,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     setPreview: (
-        albumId: string,
-        query: {
-          /**
-           * Item Id
-           * @format uuid
-           */
-          item_id: string;
-        },
-        params: RequestParams = {},
+      albumId: string,
+      query: {
+        /**
+         * Item Id
+         * @format uuid
+         */
+        item_id: string;
+      },
+      params: RequestParams = {},
     ) =>
-        this.request<Album, HTTPValidationError>({
-          path: `/albums/${albumId}/preview`,
-          method: "POST",
-          query: query,
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<Album, HTTPValidationError>({
+        path: `/albums/${albumId}/preview`,
+        method: "POST",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
   };
   items = {
     /**
@@ -502,16 +542,20 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/items/{album_id}
      * @secure
      */
-    uploadItems: (albumId: string, data: BodyUploadItems, params: RequestParams = {}) =>
-        this.request<Item[], HTTPValidationError>({
-          path: `/items/${albumId}`,
-          method: "POST",
-          body: data,
-          secure: true,
-          type: ContentType.FormData,
-          format: "json",
-          ...params,
-        }),
+    uploadItems: (
+      albumId: string,
+      data: BodyUploadItems,
+      params: RequestParams = {},
+    ) =>
+      this.request<Item[], HTTPValidationError>({
+        path: `/items/${albumId}`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -521,16 +565,20 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/items/{album_id}/delete
      * @secure
      */
-    deleteItems: (albumId: string, data: string[], params: RequestParams = {}) =>
-        this.request<Album, HTTPValidationError>({
-          path: `/items/${albumId}/delete`,
-          method: "POST",
-          body: data,
-          secure: true,
-          type: ContentType.Json,
-          format: "json",
-          ...params,
-        }),
+    deleteItems: (
+      albumId: string,
+      data: string[],
+      params: RequestParams = {},
+    ) =>
+      this.request<Album, HTTPValidationError>({
+        path: `/items/${albumId}/delete`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
   };
   users = {
     /**
@@ -542,13 +590,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     getUser: (params: RequestParams = {}) =>
-        this.request<User, any>({
-          path: `/users/me`,
-          method: "GET",
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<User, any>({
+        path: `/users/me`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
   };
   smoelen = {
     /**
@@ -560,13 +608,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     getSmoelen: (params: RequestParams = {}) =>
-        this.request<SmoelAlbumList[], any>({
-          path: `/smoelen`,
-          method: "GET",
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<SmoelAlbumList[], any>({
+        path: `/smoelen`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * No description
@@ -577,12 +625,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     getSmoel: (smoelId: string, params: RequestParams = {}) =>
-        this.request<SmoelAlbum, HTTPValidationError>({
-          path: `/smoelen/${smoelId}`,
-          method: "GET",
-          secure: true,
-          format: "json",
-          ...params,
-        }),
+      this.request<SmoelAlbum, HTTPValidationError>({
+        path: `/smoelen/${smoelId}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
   };
 }
