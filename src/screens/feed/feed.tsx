@@ -27,10 +27,8 @@ export default function FeedScreen() {
   const [_slots, setSlots] = useAtom(slotsAtom);
 
   async function refresh() {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
     setRefreshing(true);
-    const token = await authState.token;
+    const token = authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null;
     await Promise.all([
       new Promise<void>(async (resolve) => {
         setSlots(null);
@@ -66,7 +64,7 @@ export default function FeedScreen() {
         }
       >
         <View style={styles.container}>
-          {authState.authenticated === Authed.AUTHENTICATED && <Listing />}
+          <Listing />
           <Feed />
         </View>
       </ScrollView>

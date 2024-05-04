@@ -1,17 +1,12 @@
-import { useContext, useEffect } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import { getSlots, Slot, slotsAtom } from "../../stores/register";
-import {
-  ActivityIndicator,
-  Avatar,
-  Card,
-  IconButton,
-} from "react-native-paper";
-import { StyleSheet, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
-import { StackParamList } from "../../../App";
+import {useContext, useEffect} from "react";
+import AuthContext, {Authed} from "../../auth";
+import {useAtom} from "jotai";
+import {getSlots, Slot, slotsAtom} from "../../stores/register";
+import {ActivityIndicator, Avatar, Card, IconButton,} from "react-native-paper";
+import {StyleSheet, TouchableOpacity} from "react-native";
+import {useNavigation} from "@react-navigation/native";
+import {NativeStackNavigationProp} from "react-native-screens/native-stack";
+import {StackParamList} from "../../../App";
 
 type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
 
@@ -42,9 +37,7 @@ export default function Listing() {
 
   useEffect(() => {
     async function fetchDays() {
-      if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
-      setSlots(await getSlots(await authState.token));
+      setSlots(await getSlots(authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null));
     }
 
     fetchDays().then();

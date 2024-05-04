@@ -260,7 +260,7 @@ function AuthScreen({
         Log in
       </Button>
       <Text onPress={guest} style={styles.guest}>
-        Of ga door als gast
+        Gebruik demo mode
       </Text>
     </SafeAreaView>
   );

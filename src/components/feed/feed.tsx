@@ -1,14 +1,10 @@
-import { useContext, useEffect } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import {
-  feedAtom,
-  getAnnouncements,
-  getRSSFeed,
-  sortFeeds,
-} from "../../stores/feed";
-import { ActivityIndicator, Card } from "react-native-paper";
+import {useContext, useEffect} from "react";
+import AuthContext, {Authed} from "../../auth";
+import {useAtom} from "jotai";
+import {ActionType, feedAtom, getAnnouncements, getRSSFeed, sortFeeds,} from "../../stores/feed";
+import {ActivityIndicator, Card} from "react-native-paper";
 import Item from "./item";
+import {Asset} from "expo-asset";
 
 export default function Feed() {
   const authState = useContext(AuthContext);
@@ -16,16 +12,11 @@ export default function Feed() {
 
   useEffect(() => {
     async function getFeeds() {
-      if (authState.authenticated === Authed.AUTHENTICATED) {
-        const feeds = await Promise.all([
+      const feeds = await Promise.all([
           getRSSFeed(),
-          getAnnouncements(await authState.token),
+          getAnnouncements(authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null),
         ]);
-        setFeed(sortFeeds(...feeds));
-      }
-      if (authState.authenticated === Authed.GUEST) {
-        setFeed(await getRSSFeed());
-      }
+        setFeed(sortFeeds(...feeds))
     }
 
     getFeeds().then();

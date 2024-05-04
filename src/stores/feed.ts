@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { parse } from "rss-to-json";
 import { Item } from "../screens/feed/search";
+import {Asset} from "expo-asset";
 
 export enum ActionType {
   LINK,
@@ -44,7 +45,20 @@ export async function getRSSFeed(): Promise<FeedItem[]> {
     },
   }));
 }
-export async function getAnnouncements(token: string): Promise<FeedItem[]> {
+export async function getAnnouncements(token: string|null): Promise<FeedItem[]> {
+  if (!token) {
+    return [{
+      icon: "bullhorn",
+      title: 'DJO Aankondigingen',
+      description: 'Update over de DJO Locatie',
+      date: new Date().getTime(),
+      action: {
+        type: ActionType.VIEW,
+        source: await fetch(Asset.fromModule(require('../../assets/demo.html')).uri).then(res => res.text())
+      },
+    }]
+  }
+
   const announcements: Record<string, string>[] = await fetch(
     "https://leden.djoamersfoort.nl/notifications/announcements",
     {

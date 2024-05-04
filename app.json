@@ -3,7 +3,7 @@
     "name": "djo",
     "slug": "djo",
     "scheme": "djo",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "2",
+      "buildNumber": "1",
       "userInterfaceStyle": "automatic",
       "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
@@ -39,7 +39,7 @@
         "backgroundColor": "#202088"
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 5
+      "versionCode": 6
     },
     "web": {
       "favicon": "./assets/favicon.png"

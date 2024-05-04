@@ -2,7 +2,7 @@ import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, StyleSheet, View } from "react-native";
 import { Button, Card, Chip, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
-import { getSlots, Slot, slotsAtom } from "../../stores/register";
+import {demoSlots, getSlots, Slot, slotsAtom} from "../../stores/register";
 import { useAtom } from "jotai";
 import { StackParamList } from "../../../App";
 import AuthContext, { Authed } from "../../auth";
@@ -11,28 +11,39 @@ type Props = StackScreenProps<StackParamList, "Slot">;
 
 export default function SlotScreen({ route, navigation }: Props) {
   const [slots, setSlots] = useAtom(slotsAtom);
+  if (!slots) return <></>
+
   const [slot, setSlot] = useState<Slot>(slots[route.params.slot]);
   const [loading, setLoading] = useState(false);
 
   const authState = useContext(AuthContext);
 
   async function register() {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
     setLoading(true);
-    const token = await authState.token;
-    const { error }: { error: string | undefined } = await fetch(
-      `https://aanmelden.djoamersfoort.nl/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
-    ).then((res) => res.json());
+    const token = authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null;
+    if (token) {
+      const { error }: { error: string | undefined } = await fetch(
+          `https://aanmelden.djoamersfoort.nl/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
+      ).then((res) => res.json());
 
-    if (error) {
-      setLoading(false);
-      return Alert.alert(error);
+      if (error) {
+        setLoading(false);
+        return Alert.alert(error);
+      }
+    } else {
+      if (slot.is_registered) {
+        slot.available++
+        slot.taken--
+      } else {
+        slot.available--
+        slot.taken++
+      }
+      slot.is_registered = !slot.is_registered
     }
 
     setSlots(await getSlots(token));

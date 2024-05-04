@@ -29,9 +29,9 @@ export default function SettingsScreen() {
             )}
             {authState.authenticated === Authed.GUEST && (
               <Card.Content style={styles.content}>
-                <Text>Niet ingelogd</Text>
+                <Text>Demo Mode</Text>
                 <Button mode={"contained"} onPress={authState.login}>
-                  Log in
+                  Ga uit demo mode
                 </Button>
               </Card.Content>
             )}
