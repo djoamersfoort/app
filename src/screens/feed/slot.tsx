@@ -135,10 +135,12 @@ export default function SlotScreen({ route, navigation }: Props) {
                 <Card.Content>
                   <PaperSelect
                     label={"Lid handmatig aanmelden"}
-                    arrayList={members.sort((a, b) => a.name < b.name ? -1 : 1) .map(({ id, name }) => ({
-                      _id: id.toString(),
-                      value: name,
-                    }))}
+                    arrayList={members
+                      .sort((a, b) => (a.name < b.name ? -1 : 1))
+                      .map(({ id, name }) => ({
+                        _id: id.toString(),
+                        value: name,
+                      }))}
                     selectedArrayList={[]}
                     multiEnable={false}
                     value={""}
