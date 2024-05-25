@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import AuthContext, { Authed } from "../../auth";
 import { useAtom } from "jotai";
-import { getSlots, Slot, slotsAtom } from "../../stores/register";
+import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
 import {
   ActivityIndicator,
   Avatar,
@@ -39,16 +39,18 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
 export default function Listing() {
   const authState = useContext(AuthContext);
   const [slots, setSlots] = useAtom(slotsAtom);
+  const [_members, setMembers] = useAtom(membersAtom);
 
   useEffect(() => {
     async function fetchDays() {
-      setSlots(
-        await getSlots(
-          authState.authenticated === Authed.AUTHENTICATED
-            ? await authState.token
-            : null,
-        ),
+      const { slots, members } = await getSlots(
+        authState.authenticated === Authed.AUTHENTICATED
+          ? await authState.token
+          : null,
       );
+
+      setSlots(slots);
+      setMembers(members || []);
     }
 
     fetchDays().then();

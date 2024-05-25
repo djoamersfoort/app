@@ -10,7 +10,7 @@ import {
   getRSSFeed,
   sortFeeds,
 } from "../../stores/feed";
-import { getSlots, slotsAtom } from "../../stores/register";
+import { getSlots, slotsAtom, membersAtom } from "../../stores/register";
 import AuthContext, { Authed } from "../../auth";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
@@ -25,6 +25,7 @@ export default function FeedScreen() {
   const authState = useContext(AuthContext);
   const [_feed, setFeed] = useAtom(feedAtom);
   const [_slots, setSlots] = useAtom(slotsAtom);
+  const [_members, setMembers] = useAtom(membersAtom);
 
   async function refresh() {
     setRefreshing(true);
@@ -35,8 +36,10 @@ export default function FeedScreen() {
     await Promise.all([
       new Promise<void>(async (resolve) => {
         setSlots(null);
-        const slots = await getSlots(token);
+        const { slots, members } = await getSlots(token);
         setSlots(slots);
+        setMembers(members || []);
+
         resolve();
       }),
       new Promise<void>(async (resolve) => {
