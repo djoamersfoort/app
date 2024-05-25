@@ -27,7 +27,7 @@ jobs:
           eas-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Build app for IOS
         run: eas build --output ./app.ipa --platform ios ${{ env.EAS_BUILD_ARGS }}
