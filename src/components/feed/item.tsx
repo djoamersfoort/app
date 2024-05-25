@@ -31,6 +31,12 @@ export default function Item({ item }: { item: FeedItem }) {
         });
         break;
       }
+      case ActionType.EVENT: {
+        navigation.navigate("Event", {
+          event: item.action.event,
+          title: item.title,
+        });
+      }
     }
   }
 

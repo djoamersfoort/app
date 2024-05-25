@@ -1,12 +1,14 @@
 import { atom } from "jotai";
 import { parse } from "rss-to-json";
 import { Item } from "../screens/feed/search";
-import {Asset} from "expo-asset";
+import { Asset } from "expo-asset";
+import { SerializedComponent } from "unfucked-ical";
 
 export enum ActionType {
   LINK,
   VIEW,
   ITEM,
+  EVENT,
 }
 interface LinkAction {
   type: ActionType.LINK;
@@ -20,7 +22,11 @@ interface ItemAction {
   type: ActionType.ITEM;
   item: Item;
 }
-export type Action = LinkAction | ViewAction | ItemAction;
+interface EventAction {
+  type: ActionType.EVENT;
+  event: SerializedComponent;
+}
+export type Action = LinkAction | ViewAction | ItemAction | EventAction;
 
 export interface FeedItem {
   icon: string;
@@ -45,18 +51,24 @@ export async function getRSSFeed(): Promise<FeedItem[]> {
     },
   }));
 }
-export async function getAnnouncements(token: string|null): Promise<FeedItem[]> {
+export async function getAnnouncements(
+  token: string | null,
+): Promise<FeedItem[]> {
   if (!token) {
-    return [{
-      icon: "bullhorn",
-      title: 'DJO Aankondigingen',
-      description: 'Update over de DJO Locatie',
-      date: new Date().getTime(),
-      action: {
-        type: ActionType.VIEW,
-        source: await fetch(Asset.fromModule(require('../../assets/demo.html')).uri).then(res => res.text())
+    return [
+      {
+        icon: "bullhorn",
+        title: "DJO Aankondigingen",
+        description: "Update over de DJO Locatie",
+        date: new Date().getTime(),
+        action: {
+          type: ActionType.VIEW,
+          source: await fetch(
+            Asset.fromModule(require("../../assets/demo.html")).uri,
+          ).then((res) => res.text()),
+        },
       },
-    }]
+    ];
   }
 
   const announcements: Record<string, string>[] = await fetch(

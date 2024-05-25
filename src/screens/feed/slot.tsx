@@ -2,7 +2,7 @@ import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, StyleSheet, View } from "react-native";
 import { Button, Card, Chip, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
-import {demoSlots, getSlots, Slot, slotsAtom} from "../../stores/register";
+import { getSlots, Slot, slotsAtom } from "../../stores/register";
 import { useAtom } from "jotai";
 import { StackParamList } from "../../../App";
 import AuthContext, { Authed } from "../../auth";
@@ -11,7 +11,7 @@ type Props = StackScreenProps<StackParamList, "Slot">;
 
 export default function SlotScreen({ route, navigation }: Props) {
   const [slots, setSlots] = useAtom(slotsAtom);
-  if (!slots) return <></>
+  if (!slots) return <></>;
 
   const [slot, setSlot] = useState<Slot>(slots[route.params.slot]);
   const [loading, setLoading] = useState(false);
@@ -20,15 +20,18 @@ export default function SlotScreen({ route, navigation }: Props) {
 
   async function register() {
     setLoading(true);
-    const token = authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null;
+    const token =
+      authState.authenticated === Authed.AUTHENTICATED
+        ? await authState.token
+        : null;
     if (token) {
       const { error }: { error: string | undefined } = await fetch(
-          `https://aanmelden.djoamersfoort.nl/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
-          {
-            headers: {
-              authorization: `Bearer ${token}`,
-            },
+        `https://aanmelden.djoamersfoort.nl/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
+        {
+          headers: {
+            authorization: `Bearer ${token}`,
           },
+        },
       ).then((res) => res.json());
 
       if (error) {
@@ -37,13 +40,13 @@ export default function SlotScreen({ route, navigation }: Props) {
       }
     } else {
       if (slot.is_registered) {
-        slot.available++
-        slot.taken--
+        slot.available++;
+        slot.taken--;
       } else {
-        slot.available--
-        slot.taken++
+        slot.available--;
+        slot.taken++;
       }
-      slot.is_registered = !slot.is_registered
+      slot.is_registered = !slot.is_registered;
     }
 
     setSlots(await getSlots(token));
