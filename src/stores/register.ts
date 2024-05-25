@@ -1,6 +1,17 @@
 import { atom } from "jotai";
 import { nextFriday, nextSaturday } from "date-fns";
 
+export interface Presence {
+  id: number;
+  seen: boolean;
+  name: string;
+}
+
+export interface Member {
+  id: number;
+  name: string;
+}
+
 export interface Slot {
   name: string;
   pod: string;
@@ -8,6 +19,7 @@ export interface Slot {
   announcement: string;
   tutors: string[];
   date: string;
+  presence?: Presence[];
 
   available: number;
   taken: number;
@@ -42,16 +54,17 @@ export const demoSlots = [
 ];
 
 export const slotsAtom = atom<Slot[] | null>([]);
+export const membersAtom = atom<Member[]>([]);
 export async function getSlots(token: string | null) {
   if (!token) {
     await new Promise((resolve) =>
       setTimeout(resolve, Math.random() * 500 + 250),
     );
 
-    return demoSlots;
+    return { slots: demoSlots };
   }
 
-  const { slots }: { slots: Slot[] } = await fetch(
+  const { slots, members }: { slots: Slot[]; members?: Member[] } = await fetch(
     "https://aanmelden.djoamersfoort.nl/api/v1/slots",
     {
       headers: {
@@ -60,5 +73,5 @@ export async function getSlots(token: string | null) {
     },
   ).then((res) => res.json());
 
-  return slots;
+  return { slots, members };
 }
