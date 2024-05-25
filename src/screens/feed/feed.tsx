@@ -1,4 +1,4 @@
-import { Appbar, Text, useTheme } from "react-native-paper";
+import { Appbar } from "react-native-paper";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import Listing from "../../components/register/listing";
 import Feed from "../../components/feed/feed";
@@ -28,7 +28,10 @@ export default function FeedScreen() {
 
   async function refresh() {
     setRefreshing(true);
-    const token = authState.authenticated === Authed.AUTHENTICATED ? await authState.token : null;
+    const token =
+      authState.authenticated === Authed.AUTHENTICATED
+        ? await authState.token
+        : null;
     await Promise.all([
       new Promise<void>(async (resolve) => {
         setSlots(null);

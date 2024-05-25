@@ -23,9 +23,10 @@ import { useColorScheme } from "react-native";
 import merge from "deepmerge";
 import WebScreen from "./src/screens/web";
 import * as Notifications from "expo-notifications";
-import SearchScreen from "./src/screens/feed/search";
-import { Item as InventoryItem } from "./src/screens/feed/search";
+import SearchScreen, { Item as InventoryItem } from "./src/screens/feed/search";
 import ItemScreen from "./src/screens/feed/item";
+import { SerializedComponent } from "unfucked-ical";
+import EventScreen from "./src/screens/calendar/event";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -47,6 +48,7 @@ export type StackParamList = {
   Web: { source: string; title: string };
   Search: undefined;
   Item: { item: InventoryItem; title: string };
+  Event: { event: SerializedComponent; title: string };
 };
 
 const Stack = createStackNavigator<StackParamList>();
@@ -123,6 +125,13 @@ export default function App() {
             <Stack.Screen
               name={"Item"}
               component={ItemScreen}
+              options={({ route }) => ({
+                title: route.params.title,
+              })}
+            />
+            <Stack.Screen
+              name={"Event"}
+              component={EventScreen}
               options={({ route }) => ({
                 title: route.params.title,
               })}

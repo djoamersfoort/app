@@ -4,6 +4,7 @@ import MediaScreen from "./media/media";
 import SettingsScreen from "./settings";
 import { useContext } from "react";
 import AuthContext, { Authed } from "../auth";
+import CalendarScreen from "./calendar/calendar";
 
 const Tab = createMaterialBottomTabNavigator();
 
@@ -18,6 +19,14 @@ export default function HomeScreen() {
         options={{
           tabBarLabel: "Home",
           tabBarIcon: "home",
+        }}
+      />
+      <Tab.Screen
+        name={"Agenda"}
+        component={CalendarScreen}
+        options={{
+          tabBarLabel: "Agenda",
+          tabBarIcon: "calendar",
         }}
       />
       {authState.authenticated === Authed.AUTHENTICATED && (
