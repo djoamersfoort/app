@@ -38,8 +38,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#202088"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDylBhuAOrAusZzyiVUm9NRWgk83Jzc6vY"
+        }
+      },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 7
+      "versionCode": 8
     },
     "web": {
       "favicon": "./assets/favicon.png"

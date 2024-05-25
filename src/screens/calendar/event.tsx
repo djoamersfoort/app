@@ -106,7 +106,7 @@ export default function EventScreen({ route, navigation }: Props) {
       authState.authenticated === Authed.AUTHENTICATED
         ? await authState.token
         : null;
-    if (!slots || slots.length === 0) setSlots(await getSlots(token));
+    if (!slots || slots.length === 0) setSlots((await getSlots(token)).slots);
 
     const slot = slots!.findIndex((slot) =>
       isSameDay(
