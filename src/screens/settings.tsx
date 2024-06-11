@@ -2,10 +2,17 @@ import { useContext } from "react";
 import AuthContext, { Authed } from "../auth";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Appbar, Button, Card, Text } from "react-native-paper";
+import * as WebBrowser from "expo-web-browser";
 import auth from "../auth";
 
 export default function SettingsScreen() {
   const authState = useContext(AuthContext);
+
+  async function orderList() {
+    await WebBrowser.openBrowserAsync(
+      "https://docs.google.com/document/d/1cyrfqq37l9QdhByT1zExyk_W7TDEhyO6/edit",
+    );
+  }
 
   return (
     <>
@@ -14,6 +21,14 @@ export default function SettingsScreen() {
       </Appbar.Header>
       <ScrollView>
         <View style={styles.container}>
+          <Card>
+            <Card.Title title={"Algemeen"} />
+            <Card.Content style={styles.content}>
+              <Button mode={"contained"} onPress={orderList}>
+                Bestellijst
+              </Button>
+            </Card.Content>
+          </Card>
           <Card>
             <Card.Title title={"Account"} />
             {authState.authenticated === Authed.AUTHENTICATED && (

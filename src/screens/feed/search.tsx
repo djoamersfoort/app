@@ -1,10 +1,19 @@
-import { Card, Searchbar, useTheme } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  Icon,
+  Searchbar,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";
 import { parse } from "fast-html-parser";
+import * as WebBrowser from "expo-web-browser";
 
 export interface Item {
   id: number;
@@ -78,62 +87,106 @@ export default function SearchScreen() {
   const [search, setSearch] = useState("");
   const navigation = useNavigation();
 
-  const [itemResults, setItemsResults] = useState<FeedItem[]>([]);
-  const [articleResults, setArticleResults] = useState<FeedItem[]>([]);
+  const [itemResults, setItemsResults] = useState<FeedItem[] | null>(null);
+  const [articleResults, setArticleResults] = useState<FeedItem[] | null>(null);
+  const [searched, setSearched] = useState(false);
 
   async function updateResults() {
+    setSearched(!!search);
     if (!search) return;
+
+    setItemsResults(null);
+    setArticleResults(null);
+
     getItems(search).then(setItemsResults);
     getArticles(search).then(setArticleResults);
   }
 
+  async function orderList() {
+    await WebBrowser.openBrowserAsync(
+      "https://docs.google.com/document/d/1cyrfqq37l9QdhByT1zExyk_W7TDEhyO6/edit",
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.view}>
-      <View
-        style={{
-          ...styles.component,
-          backgroundColor: theme.colors.background,
-        }}
-      >
-        <Searchbar
-          placeholder="Search"
-          onChangeText={setSearch}
-          onSubmitEditing={updateResults}
-          icon={"chevron-left"}
-          onIconPress={navigation.goBack}
-          value={search}
-        />
-      </View>
-      <ScrollView>
+    <>
+      <SafeAreaView style={styles.view}>
         <View
           style={{
             ...styles.component,
-            ...styles.results,
+            backgroundColor: theme.colors.background,
           }}
         >
-          {itemResults.length > 0 && (
-            <Card>
-              <Card.Title title={"Inventaris"} />
-              <Card.Content style={styles.content}>
-                {itemResults.map((result, index) => (
-                  <Item key={index} item={result} />
-                ))}
-              </Card.Content>
-            </Card>
-          )}
-          {articleResults.length > 0 && (
-            <Card>
-              <Card.Title title={"Artikelen"} />
-              <Card.Content style={styles.content}>
-                {articleResults.map((result, index) => (
-                  <Item key={index} item={result} />
-                ))}
-              </Card.Content>
-            </Card>
-          )}
+          <Searchbar
+            placeholder="Search"
+            onChangeText={setSearch}
+            onSubmitEditing={updateResults}
+            icon={"chevron-left"}
+            onIconPress={navigation.goBack}
+            value={search}
+          />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View
+            style={{
+              ...styles.component,
+              ...styles.results,
+            }}
+          >
+            {searched && (
+              <>
+                <Card>
+                  <Card.Title title={"Inventaris"} />
+                  <Card.Content style={styles.content}>
+                    {itemResults ? (
+                      itemResults.length > 0 ? (
+                        itemResults.map((result, index) => (
+                          <Item key={index} item={result} />
+                        ))
+                      ) : (
+                        <View style={styles.center}>
+                          <Text>Geen producten gevonden</Text>
+                          <Button onPress={orderList} mode={"text"}>
+                            Mis je iets? Bekijk de bestellijst
+                          </Button>
+                        </View>
+                      )
+                    ) : (
+                      <ActivityIndicator animating={true} />
+                    )}
+                  </Card.Content>
+                </Card>
+                <Card>
+                  <Card.Title title={"Artikelen"} />
+                  <Card.Content style={styles.content}>
+                    {articleResults ? (
+                      articleResults.length > 0 ? (
+                        articleResults.map((result, index) => (
+                          <Item key={index} item={result} />
+                        ))
+                      ) : (
+                        <View style={styles.center}>
+                          <Text>Geen artikelen gevonden</Text>
+                        </View>
+                      )
+                    ) : (
+                      <ActivityIndicator animating={true} />
+                    )}
+                  </Card.Content>
+                </Card>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+      {!searched && (
+        <View style={styles.start}>
+          <Icon size={75} source={"magnify"} />
+          <Text>Zoek naar artikelen en items in de inventaris</Text>
+        </View>
+      )}
+    </>
   );
 }
 
@@ -151,6 +204,20 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   content: {
+    gap: 10,
+  },
+  center: {
+    alignItems: "center",
+  },
+  start: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: "100%",
+    height: "100%",
+    zIndex: -1,
+    justifyContent: "center",
+    alignItems: "center",
     gap: 10,
   },
 });
