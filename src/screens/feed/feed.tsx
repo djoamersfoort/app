@@ -15,6 +15,7 @@ import AuthContext, { Authed } from "../../auth";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
 import { useNavigation } from "@react-navigation/native";
+import logging from "../../logging";
 
 type NavigationProps = NativeStackNavigationProp<StackParamList, "Search">;
 
@@ -33,6 +34,11 @@ export default function FeedScreen() {
       authState.authenticated === Authed.AUTHENTICATED
         ? await authState.token
         : null;
+    logging.log(
+      "FEED",
+      `Refreshing feed with auth state ${authState.authenticated}, token is ${token ? "defined" : "undefined"}`,
+    );
+
     await Promise.all([
       new Promise<void>(async (resolve) => {
         setSlots(null);
