@@ -1,26 +1,13 @@
 import { StackScreenProps } from "@react-navigation/stack";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  Button,
-  Card,
-  Checkbox,
-  Chip,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Card, Chip, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
 import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
 import { useAtom } from "jotai";
 import { StackParamList } from "../../../App";
 import AuthContext, { Authed } from "../../auth";
-import Presence from "../../components/register/presence";
-import { PaperSelect } from "react-native-paper-select";
+import { AANMELDEN } from "../../env";
+import PresenceCard from "../../components/register/precenseCard";
 
 type Props = StackScreenProps<StackParamList, "Slot">;
 
@@ -31,25 +18,8 @@ export default function SlotScreen({ route, navigation }: Props) {
   const [slot, setSlot] = useState<Slot>(slots[route.params.slot]);
   const [loading, setLoading] = useState(false);
   const [members] = useAtom(membersAtom);
-  const theme = useTheme();
 
   const authState = useContext(AuthContext);
-
-  async function registerManual(user: string) {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
-    const token = await authState.token;
-    await fetch(
-      `https://aanmelden.djoamersfoort.nl/api/v1/register_manual/${slot.name}/${slot.pod}/${user}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    setSlots((await getSlots(token)).slots);
-  }
 
   async function register() {
     setLoading(true);
@@ -59,7 +29,7 @@ export default function SlotScreen({ route, navigation }: Props) {
         : null;
     if (token) {
       const { error }: { error: string | undefined } = await fetch(
-        `https://aanmelden.djoamersfoort.nl/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
+        `${AANMELDEN}/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
         {
           headers: {
             authorization: `Bearer ${token}`,
@@ -133,40 +103,7 @@ export default function SlotScreen({ route, navigation }: Props) {
               <Text variant={"titleMedium"}>Leden</Text>
               <Card>
                 <Card.Content>
-                  <PaperSelect
-                    label={"Lid handmatig aanmelden"}
-                    arrayList={members
-                      .sort((a, b) => (a.name < b.name ? -1 : 1))
-                      .map(({ id, name }) => ({
-                        _id: id.toString(),
-                        value: name,
-                      }))}
-                    selectedArrayList={[]}
-                    multiEnable={false}
-                    value={""}
-                    onSelection={async (selection) => {
-                      if (!selection.selectedList[0]) return;
-                      await registerManual(selection.selectedList[0]._id);
-                    }}
-                    theme={theme}
-                    textInputStyle={{
-                      backgroundColor: theme.colors.elevation.level5,
-                      color: theme.colors.onPrimaryContainer,
-                    }}
-                    searchStyle={{
-                      backgroundColor: theme.colors.elevation.level5,
-                    }}
-                    textColor={theme.colors.onPrimary}
-                  />
-                  <View style={styles.presence}>
-                    {slot.presence.map((presence) => (
-                      <Presence
-                        key={presence.id}
-                        presence={presence}
-                        slot={slot}
-                      />
-                    ))}
-                  </View>
+                  <PresenceCard slot={slot} members={members} />
                 </Card.Content>
               </Card>
             </>
@@ -218,8 +155,5 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 25,
-  },
-  presence: {
-    gap: 5,
   },
 });

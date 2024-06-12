@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { nextFriday, nextSaturday } from "date-fns";
+import { AANMELDEN } from "../env";
 
 export interface Presence {
   id: number;
@@ -65,7 +66,7 @@ export async function getSlots(token: string | null) {
   }
 
   const { slots, members }: { slots: Slot[]; members?: Member[] } = await fetch(
-    "https://aanmelden.djoamersfoort.nl/api/v1/slots",
+    `${AANMELDEN}/api/v1/slots`,
     {
       headers: {
         authorization: `Bearer ${token}`,

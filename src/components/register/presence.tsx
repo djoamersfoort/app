@@ -10,6 +10,7 @@ import { useContext, useState } from "react";
 import AuthContext, { Authed } from "../../auth";
 import { useAtom } from "jotai";
 import { Platform } from "react-native";
+import { AANMELDEN } from "../../env";
 
 export default function Presence({
   presence,
@@ -32,7 +33,7 @@ export default function Presence({
 
     const token = await authState.token;
     await fetch(
-      `https://aanmelden.djoamersfoort.nl/api/v1/seen/${presence.id}/${presence.seen ? "true" : "false"}`,
+      `${AANMELDEN}/api/v1/seen/${presence.id}/${presence.seen ? "true" : "false"}`,
       {
         headers: {
           authorization: `Bearer ${token}`,
