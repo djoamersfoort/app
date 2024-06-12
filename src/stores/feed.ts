@@ -3,6 +3,7 @@ import { parse } from "rss-to-json";
 import { Item } from "../screens/feed/search";
 import { Asset } from "expo-asset";
 import { SerializedComponent } from "unfucked-ical";
+import { LEDEN_ADMIN } from "../env";
 
 export enum ActionType {
   LINK,
@@ -72,7 +73,7 @@ export async function getAnnouncements(
   }
 
   const announcements: Record<string, string>[] = await fetch(
-    "https://leden.djoamersfoort.nl/notifications/announcements",
+    `${LEDEN_ADMIN}/notifications/announcements`,
     {
       headers: {
         authorization: `Bearer ${token}`,

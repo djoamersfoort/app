@@ -9,6 +9,7 @@ import { DiscoveryDocument } from "expo-auth-session";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import { CLIENT_ID, LEDEN_ADMIN, SCOPES } from "./env";
 
 const redirectUri = AuthSession.makeRedirectUri({ path: "redirect" });
 WebBrowser.maybeCompleteAuthSession();
@@ -98,7 +99,7 @@ async function registerForPushNotifications(user: AuthenticatedState) {
   const { data: pushToken } = await Notifications.getExpoPushTokenAsync({
     projectId: config.extra?.eas.projectId,
   });
-  await fetch("https://leden.djoamersfoort.nl/notifications/token", {
+  await fetch(`${LEDEN_ADMIN}/notifications/token`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${await user.token}`,
@@ -137,7 +138,7 @@ function createAuthState(
           },
           body: new URLSearchParams({
             grant_type: "refresh_token",
-            client_id: "QI0CNwnSLMJQbsZindMceAhtPR7lQlis0lTcCxGZ",
+            client_id: CLIENT_ID,
             refresh_token: refresh,
           }).toString(),
         }).then((res) => res.json());
@@ -173,16 +174,9 @@ function AuthScreen({
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
     {
       redirectUri,
-      clientId: "QI0CNwnSLMJQbsZindMceAhtPR7lQlis0lTcCxGZ",
+      clientId: CLIENT_ID,
       responseType: "code",
-      scopes: [
-        "openid",
-        "user/basic",
-        "user/names",
-        "user/email",
-        "media",
-        "aanmelden",
-      ],
+      scopes: SCOPES,
     },
     discovery,
   );
@@ -207,7 +201,7 @@ function AuthScreen({
         },
         body: new URLSearchParams({
           grant_type: "authorization_code",
-          client_id: "QI0CNwnSLMJQbsZindMceAhtPR7lQlis0lTcCxGZ",
+          client_id: CLIENT_ID,
           code: result.params.code,
           redirect_uri: redirectUri,
           code_verifier: request?.codeVerifier,
@@ -221,6 +215,7 @@ function AuthScreen({
       await SecureStore.setItemAsync("id_token", token);
       await SecureStore.setItemAsync("expiration_date", expiry.toString());
       await SecureStore.setItemAsync("refresh_token", refresh!);
+      await SecureStore.setItemAsync("scopes", JSON.stringify(SCOPES));
 
       setAuthenticated(
         createAuthState(setAuthenticated, discovery, token, refresh!, expiry),
@@ -268,9 +263,7 @@ function AuthScreen({
 
 export function AuthProvider({ children }: { children: JSX.Element }) {
   const theme = useTheme();
-  const discovery = AuthSession.useAutoDiscovery(
-    "https://leden.djoamersfoort.nl/o",
-  );
+  const discovery = AuthSession.useAutoDiscovery(`${LEDEN_ADMIN}/o`);
   const [authenticated, setAuthenticated] = useState<AuthState>({
     authenticated: Authed.LOADING,
   });
@@ -294,7 +287,12 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
       const refresh = await SecureStore.getItemAsync("refresh_token");
       const expiry = await SecureStore.getItemAsync("expiration_date");
 
-      if (!token || !refresh || !expiry) {
+      const scopes = JSON.parse(
+        (await SecureStore.getItemAsync("scopes")) || "[]",
+      ) as string[];
+      const missing = SCOPES.find((scope) => !scopes.includes(scope));
+
+      if (!token || !refresh || !expiry || missing) {
         return setAuthenticated({
           authenticated: Authed.UNAUTHENTICATED,
         });
