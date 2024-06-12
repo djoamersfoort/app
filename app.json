@@ -16,7 +16,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "2",
       "userInterfaceStyle": "automatic",
       "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
@@ -44,7 +44,7 @@
         }
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 9
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"
