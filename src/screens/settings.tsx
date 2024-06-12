@@ -4,6 +4,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { Appbar, Button, Card, Text } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
 import auth from "../auth";
+import logging from "../logging";
+import * as Sharing from "expo-sharing";
 
 export default function SettingsScreen() {
   const authState = useContext(AuthContext);
@@ -12,6 +14,16 @@ export default function SettingsScreen() {
     await WebBrowser.openBrowserAsync(
       "https://docs.google.com/document/d/1cyrfqq37l9QdhByT1zExyk_W7TDEhyO6/edit",
     );
+  }
+
+  async function exportLog() {
+    if (!logging.currentFile) return;
+
+    await Sharing.shareAsync(logging.currentFile);
+  }
+
+  async function clearLog() {
+    await logging.clear();
   }
 
   return (
@@ -27,6 +39,22 @@ export default function SettingsScreen() {
               <Button mode={"contained"} onPress={orderList}>
                 Bestellijst
               </Button>
+              <View style={styles.related}>
+                <Button
+                  mode={"contained-tonal"}
+                  onPress={clearLog}
+                  style={styles.relatedButton}
+                >
+                  Leeg log
+                </Button>
+                <Button
+                  mode={"contained"}
+                  onPress={exportLog}
+                  style={styles.relatedButton}
+                >
+                  Exporteer log
+                </Button>
+              </View>
             </Card.Content>
           </Card>
           <Card>
@@ -63,8 +91,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   content: {
-    gap: 5,
+    gap: 10,
     padding: 17,
     paddingTop: 0,
+  },
+  related: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  relatedButton: {
+    flex: 1,
   },
 });
