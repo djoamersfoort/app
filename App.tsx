@@ -27,6 +27,7 @@ import SearchScreen, { Item as InventoryItem } from "./src/screens/feed/search";
 import ItemScreen from "./src/screens/feed/item";
 import { SerializedComponent } from "unfucked-ical";
 import EventScreen from "./src/screens/calendar/event";
+import "./src/logging";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { nextFriday, nextSaturday } from "date-fns";
 import { AANMELDEN } from "../env";
+import logging from "../logging";
 
 export interface Presence {
   id: number;
@@ -58,6 +59,7 @@ export const slotsAtom = atom<Slot[] | null>([]);
 export const membersAtom = atom<Member[]>([]);
 export async function getSlots(token: string | null) {
   if (!token) {
+    logging.log("REGISTER", "No valid token, reverting to demo");
     await new Promise((resolve) =>
       setTimeout(resolve, Math.random() * 500 + 250),
     );
@@ -65,6 +67,7 @@ export async function getSlots(token: string | null) {
     return { slots: demoSlots };
   }
 
+  logging.log("REGISTER", "Valid token, fetching slots");
   const { slots, members }: { slots: Slot[]; members?: Member[] } = await fetch(
     `${AANMELDEN}/api/v1/slots`,
     {

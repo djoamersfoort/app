@@ -12,6 +12,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
+import logging from "../../logging";
 
 type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
 
@@ -43,11 +44,16 @@ export default function Listing() {
 
   useEffect(() => {
     async function fetchDays() {
-      const { slots, members } = await getSlots(
+      const token =
         authState.authenticated === Authed.AUTHENTICATED
           ? await authState.token
-          : null,
+          : null;
+
+      logging.log(
+        "REGISTER",
+        `Fetching initial register data with auth state ${authState.authenticated}, token is ${token ? "defined" : "undefined"}`,
       );
+      const { slots, members } = await getSlots(token);
 
       setSlots(slots);
       setMembers(members || []);
