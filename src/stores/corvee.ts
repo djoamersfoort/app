@@ -14,7 +14,14 @@ export interface CorveeState {
   pod: string;
 }
 
-export const stateAtom = atom<CorveeState | null | undefined>(null);
+export interface CorveeError {
+  error: string;
+  ok: false;
+}
+
+export const stateAtom = atom<CorveeState | CorveeError | null | undefined>(
+  null,
+);
 
 export async function getStatus(token: string) {
   const res = await fetch(`${CORVEE}/api/v1/status`, {
@@ -23,5 +30,5 @@ export async function getStatus(token: string) {
     },
   });
 
-  return (await res.json()) as CorveeState;
+  return (await res.json()) as CorveeState | CorveeError;
 }
