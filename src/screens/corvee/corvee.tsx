@@ -3,7 +3,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { getSlots, membersAtom, slotsAtom } from "../../stores/register";
 import AuthContext, { Authed } from "../../auth";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Appbar } from "react-native-paper";
+import { ActivityIndicator, Appbar, Icon, Text } from "react-native-paper";
 import { CorveeState, getStatus, stateAtom } from "../../stores/corvee";
 import Create from "../../components/corvee/Create";
 import Selected from "../../components/corvee/Selected";
@@ -62,14 +62,19 @@ export default function CorveeScreen() {
         }
       >
         <View style={styles.content}>
-          {state ? (
+          {state && !("error" in state) && (
             <>
               {state.current.length === 0 && <Create />}
               {state.current.length > 0 && <Selected />}
             </>
-          ) : (
-            <ActivityIndicator animating={true} />
           )}
+          {state && "error" in state && (
+            <View style={styles.error}>
+              <Icon size={75} source={"emoticon-happy"} />
+              <Text variant={"titleMedium"}>{state.error}</Text>
+            </View>
+          )}
+          {!state && <ActivityIndicator animating={true} />}
         </View>
       </ScrollView>
     </>
@@ -82,5 +87,13 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 10,
     gap: 10,
+  },
+  error: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "static",
+    flex: 1,
+    gap: 20,
   },
 });
