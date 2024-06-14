@@ -10,6 +10,7 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { CLIENT_ID, LEDEN_ADMIN, SCOPES } from "./env";
+import logging from "./logging";
 
 const redirectUri = AuthSession.makeRedirectUri({ path: "redirect" });
 WebBrowser.maybeCompleteAuthSession();
@@ -131,6 +132,7 @@ function createAuthState(
       return new Promise<string>(async (resolve) => {
         if (expiry > Date.now()) return resolve(token);
 
+        logging.log("AUTH", "Refreshing tokens");
         const tokens: TokenResponse = await fetch(discovery?.tokenEndpoint!, {
           method: "post",
           headers: {
@@ -153,6 +155,7 @@ function createAuthState(
           await SecureStore.setItemAsync("refresh_token", refresh);
         }
 
+        logging.log("AUTH", "Finished refreshing tokens");
         resolve(token);
       });
     },
