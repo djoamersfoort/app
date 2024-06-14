@@ -2,7 +2,7 @@ import { Appbar } from "react-native-paper";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import Listing from "../../components/register/listing";
 import Feed from "../../components/feed/feed";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import {
   feedAtom,
@@ -28,20 +28,20 @@ export default function FeedScreen() {
   const [_slots, setSlots] = useAtom(slotsAtom);
   const [_members, setMembers] = useAtom(membersAtom);
 
-  async function refresh() {
-    setRefreshing(true);
+  async function loadData() {
     const token =
       authState.authenticated === Authed.AUTHENTICATED
         ? await authState.token
         : null;
     logging.log(
       "FEED",
-      `Refreshing feed with auth state ${authState.authenticated}, token is ${token ? "defined" : "undefined"}`,
+      `Auth state ${authState.authenticated}, token is ${token ? "defined" : "undefined"}`,
     );
 
     await Promise.all([
       new Promise<void>(async (resolve) => {
         setSlots(null);
+
         const { slots, members } = await getSlots(token);
         setSlots(slots);
         setMembers(members || []);
@@ -58,6 +58,19 @@ export default function FeedScreen() {
         resolve();
       }),
     ]);
+  }
+
+  useEffect(() => {
+    logging.log("FEED", "Loading initial data");
+
+    loadData().then();
+  }, []);
+
+  async function refresh() {
+    logging.log("FEED", "Refreshing feed");
+
+    setRefreshing(true);
+    await loadData();
     setRefreshing(false);
   }
 

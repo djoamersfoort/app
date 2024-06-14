@@ -1,7 +1,5 @@
-import { useContext, useEffect } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
+import { useAtomValue } from "jotai";
+import { Slot, slotsAtom } from "../../stores/register";
 import {
   ActivityIndicator,
   Avatar,
@@ -12,7 +10,6 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
-import logging from "../../logging";
 
 type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
 
@@ -38,29 +35,7 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
 }
 
 export default function Listing() {
-  const authState = useContext(AuthContext);
-  const [slots, setSlots] = useAtom(slotsAtom);
-  const [_members, setMembers] = useAtom(membersAtom);
-
-  useEffect(() => {
-    async function fetchDays() {
-      const token =
-        authState.authenticated === Authed.AUTHENTICATED
-          ? await authState.token
-          : null;
-
-      logging.log(
-        "REGISTER",
-        `Fetching initial register data with auth state ${authState.authenticated}, token is ${token ? "defined" : "undefined"}`,
-      );
-      const { slots, members } = await getSlots(token);
-
-      setSlots(slots);
-      setMembers(members || []);
-    }
-
-    fetchDays().then();
-  }, [authState]);
+  const slots = useAtomValue(slotsAtom);
 
   return (
     <Card>

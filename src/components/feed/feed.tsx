@@ -1,34 +1,12 @@
-import { useContext, useEffect } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import {
-  feedAtom,
-  getAnnouncements,
-  getRSSFeed,
-  sortFeeds,
-} from "../../stores/feed";
+import { useContext } from "react";
+import AuthContext from "../../auth";
+import { useAtomValue } from "jotai";
+import { feedAtom } from "../../stores/feed";
 import { ActivityIndicator, Card } from "react-native-paper";
 import Item from "./item";
 
 export default function Feed() {
-  const authState = useContext(AuthContext);
-  const [feed, setFeed] = useAtom(feedAtom);
-
-  useEffect(() => {
-    async function getFeeds() {
-      const feeds = await Promise.all([
-        getRSSFeed(),
-        getAnnouncements(
-          authState.authenticated === Authed.AUTHENTICATED
-            ? await authState.token
-            : null,
-        ),
-      ]);
-      setFeed(sortFeeds(...feeds));
-    }
-
-    getFeeds().then();
-  }, [authState]);
+  const feed = useAtomValue(feedAtom);
 
   return (
     <Card>
