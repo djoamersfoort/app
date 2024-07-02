@@ -7,11 +7,15 @@ export interface Presence {
   id: number;
   seen: boolean;
   name: string;
+  stripcard_used: number | null;
+  stripcard_count: number | null;
 }
 
 export interface Member {
   id: number;
   name: string;
+  stripcard_used: number | null;
+  stripcard_count: number | null;
 }
 
 export interface Slot {
