@@ -62,7 +62,7 @@ interface GuestState {
   authenticated: Authed.GUEST;
   login: () => void;
 }
-type AuthState =
+export type AuthState =
   | AuthenticatedState
   | UnAuthenticatedState
   | LoadingState
