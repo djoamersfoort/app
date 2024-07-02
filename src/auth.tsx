@@ -23,8 +23,8 @@ export enum Authed {
 }
 
 interface StripCard {
-  used: number,
-  count: number
+  used: number;
+  count: number;
 }
 
 interface User {
@@ -43,7 +43,7 @@ interface User {
   exp: number;
   auth_time: number;
   jti: string;
-  stripcard: StripCard|null
+  stripcard: StripCard | null;
 }
 
 interface LoadingState {

@@ -1,15 +1,13 @@
 import {
-  getSlots,
   Presence as PresenceType,
   Slot,
   slotsAtom,
 } from "../../stores/register";
-import { ActivityIndicator, Checkbox, Switch, Text } from "react-native-paper";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { Icon, Switch, Text } from "react-native-paper";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useContext, useState } from "react";
 import AuthContext, { Authed } from "../../auth";
 import { useAtom } from "jotai";
-import { Platform } from "react-native";
 import { AANMELDEN } from "../../env";
 
 export default function Presence({
@@ -46,6 +44,14 @@ export default function Presence({
     <TouchableOpacity style={styles.presence} onPress={markSeen}>
       <Switch value={seen} onChange={markSeen} />
       <Text>{presence.name}</Text>
+      {presence.stripcard_count && (
+        <View style={styles.stripcard}>
+          <Icon size={22} source={"clipboard-list"} />
+          <Text>
+            {presence.stripcard_used} / {presence.stripcard_count}
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -56,5 +62,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  stripcard: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 5,
   },
 });

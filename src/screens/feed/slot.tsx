@@ -1,6 +1,6 @@
 import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import {Button, Card, Chip, Icon, Text} from "react-native-paper";
+import { Button, Card, Chip, Icon, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
 import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
 import { useAtom } from "jotai";
@@ -66,17 +66,23 @@ export default function SlotScreen({ route, navigation }: Props) {
     <View style={styles.slot}>
       <ScrollView>
         <View style={styles.info}>
-          {authState.authenticated === Authed.AUTHENTICATED && authState.user.stripcard && (<>
-            <View style={styles.header}>
-              <Icon size={22} source={"clipboard-list"} />
-              <Text variant={"titleMedium"}>Strippenkaart</Text>
-            </View>
-            <Card>
-              <Card.Content>
-                <Text variant={"titleSmall"}>Je strippenkaart is {authState.user.stripcard.used} van de {authState.user.stripcard.count} keer gebruikt.</Text>
-              </Card.Content>
-            </Card>
-          </>)}
+          {authState.authenticated === Authed.AUTHENTICATED &&
+            authState.user.stripcard && (
+              <>
+                <View style={styles.header}>
+                  <Icon size={22} source={"clipboard-list"} />
+                  <Text variant={"titleMedium"}>Strippenkaart</Text>
+                </View>
+                <Card>
+                  <Card.Content>
+                    <Text variant={"titleSmall"}>
+                      Je strippenkaart is {authState.user.stripcard.used} van de{" "}
+                      {authState.user.stripcard.count} keer gebruikt.
+                    </Text>
+                  </Card.Content>
+                </Card>
+              </>
+            )}
           {slot.announcement && (
             <>
               <View style={styles.header}>
@@ -183,6 +189,6 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    gap: 5
-  }
+    gap: 5,
+  },
 });
