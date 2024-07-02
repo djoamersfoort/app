@@ -1,6 +1,6 @@
 import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Card, Chip, Text } from "react-native-paper";
+import {Button, Card, Chip, Icon, Text} from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
 import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
 import { useAtom } from "jotai";
@@ -66,9 +66,23 @@ export default function SlotScreen({ route, navigation }: Props) {
     <View style={styles.slot}>
       <ScrollView>
         <View style={styles.info}>
+          {authState.authenticated === Authed.AUTHENTICATED && authState.user.stripcard && (<>
+            <View style={styles.header}>
+              <Icon size={22} source={"clipboard-list"} />
+              <Text variant={"titleMedium"}>Strippenkaart</Text>
+            </View>
+            <Card>
+              <Card.Content>
+                <Text variant={"titleSmall"}>Je strippenkaart is {authState.user.stripcard.used} van de {authState.user.stripcard.count} keer gebruikt.</Text>
+              </Card.Content>
+            </Card>
+          </>)}
           {slot.announcement && (
             <>
-              <Text variant={"titleMedium"}>Aankondiging</Text>
+              <View style={styles.header}>
+                <Icon size={22} source={"bullhorn"} />
+                <Text variant={"titleMedium"}>Aankondiging</Text>
+              </View>
               <Card>
                 <Card.Content>
                   <Text variant={"titleSmall"}>{slot.announcement}</Text>
@@ -76,7 +90,10 @@ export default function SlotScreen({ route, navigation }: Props) {
               </Card>
             </>
           )}
-          <Text variant={"titleMedium"}>Beschikbaarheid</Text>
+          <View style={styles.header}>
+            <Icon size={22} source={"account"} />
+            <Text variant={"titleMedium"}>Beschikbaarheid</Text>
+          </View>
           <Card>
             <Card.Content>
               <Text variant={"titleSmall"}>
@@ -86,7 +103,10 @@ export default function SlotScreen({ route, navigation }: Props) {
             </Card.Content>
           </Card>
 
-          <Text variant={"titleMedium"}>Begeleiders</Text>
+          <View style={styles.header}>
+            <Icon size={22} source={"account-supervisor"} />
+            <Text variant={"titleMedium"}>Begeleiders</Text>
+          </View>
           <Card>
             <Card.Content style={styles.chips}>
               {slot.tutors.length === 0 && (
@@ -100,7 +120,10 @@ export default function SlotScreen({ route, navigation }: Props) {
 
           {slot.presence && (
             <>
-              <Text variant={"titleMedium"}>Leden</Text>
+              <View style={styles.header}>
+                <Icon size={22} source={"account-details"} />
+                <Text variant={"titleMedium"}>Leden</Text>
+              </View>
               <Card>
                 <Card.Content>
                   <PresenceCard slot={slot} members={members} />
@@ -156,4 +179,10 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 25,
   },
+  header: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5
+  }
 });
