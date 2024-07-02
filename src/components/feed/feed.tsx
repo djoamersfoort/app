@@ -4,20 +4,18 @@ import { useAtomValue } from "jotai";
 import { feedAtom } from "../../stores/feed";
 import { ActivityIndicator, Card } from "react-native-paper";
 import Item from "./item";
+import Area from "../area";
 
 export default function Feed() {
   const feed = useAtomValue(feedAtom);
 
   return (
-    <Card>
-      <Card.Title title={"Nieuws"} />
-      <Card.Content style={{ gap: 10 }}>
-        {feed ? (
-          feed.map((item, index) => <Item key={index} item={item} />)
-        ) : (
-          <ActivityIndicator animating={true} />
-        )}
-      </Card.Content>
-    </Card>
+    <Area title={"Nieuws"} icon={"bullhorn"}>
+      {feed ? (
+        feed.map((item, index) => <Item key={index} item={item} />)
+      ) : (
+        <ActivityIndicator animating={true} />
+      )}
+    </Area>
   );
 }

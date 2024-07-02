@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { parse, VEvent } from "unfucked-ical";
 import Item from "../../components/feed/item";
 import { ActionType, FeedItem, sortFeeds } from "../../stores/feed";
+import Area from "../../components/area";
 
 export default function CalendarScreen() {
   const [date, setDate] = useState(new Date());
@@ -64,45 +65,41 @@ export default function CalendarScreen() {
       </Appbar.Header>
       <ScrollView>
         <View style={styles.container}>
-          <Card>
-            <Card.Content style={styles.header}>
-              <View style={styles.headerText}>
-                <Icon size={18} source={"calendar"} />
-                <Text variant={"titleMedium"}>Vanaf</Text>
-              </View>
+          <Area
+            title={"Vanaf"}
+            icon={"calendar"}
+            right={
+              <>
+                {Platform.OS === "ios" && (
+                  <DateTimePicker
+                    value={date}
+                    onChange={(_, date) => setDate(date as Date)}
+                    mode={"date"}
+                  />
+                )}
+                {Platform.OS === "android" && (
+                  <Button
+                    mode={"elevated"}
+                    onPress={() => {
+                      DateTimePickerAndroid.open({
+                        value: date,
+                        onChange: (_, date) => setDate(date as Date),
+                        mode: "date",
+                      });
+                    }}
+                  >
+                    {date.toLocaleDateString("nl-NL")}
+                  </Button>
+                )}
+              </>
+            }
+          />
 
-              {Platform.OS === "ios" && (
-                <DateTimePicker
-                  value={date}
-                  onChange={(_, date) => setDate(date as Date)}
-                  mode={"date"}
-                />
-              )}
-              {Platform.OS === "android" && (
-                <Button
-                  mode={"elevated"}
-                  onPress={() => {
-                    DateTimePickerAndroid.open({
-                      value: date,
-                      onChange: (_, date) => setDate(date as Date),
-                      mode: "date",
-                    });
-                  }}
-                >
-                  {date.toLocaleDateString("nl-NL")}
-                </Button>
-              )}
-            </Card.Content>
-          </Card>
-
-          <Card>
-            <Card.Title title={"Bijzonderheden"} titleVariant={"titleMedium"} />
-            <Card.Content style={{ gap: 10 }}>
-              {items.map((item, index) => (
-                <Item item={item} key={index} />
-              ))}
-            </Card.Content>
-          </Card>
+          <Area title={"Bijzonderheden"} icon={"calendar-alert"}>
+            {items.map((item, index) => (
+              <Item item={item} key={index} />
+            ))}
+          </Area>
         </View>
       </ScrollView>
     </>

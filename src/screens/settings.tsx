@@ -6,6 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 import auth from "../auth";
 import logging from "../logging";
 import * as Sharing from "expo-sharing";
+import Area from "../components/area";
 
 export default function SettingsScreen() {
   const authState = useContext(AuthContext);
@@ -33,52 +34,50 @@ export default function SettingsScreen() {
       </Appbar.Header>
       <ScrollView>
         <View style={styles.container}>
-          <Card>
-            <Card.Title title={"Algemeen"} />
-            <Card.Content style={styles.content}>
-              <Button mode={"contained"} onPress={orderList}>
-                Bestellijst
+          <Area title={"Algemeen"} icon={"cog"}>
+            <Button mode={"contained"} onPress={orderList}>
+              Bestellijst
+            </Button>
+            <View style={styles.related}>
+              <Button
+                mode={"contained-tonal"}
+                onPress={clearLog}
+                style={styles.relatedButton}
+              >
+                Leeg log
               </Button>
-              <View style={styles.related}>
-                <Button
-                  mode={"contained-tonal"}
-                  onPress={clearLog}
-                  style={styles.relatedButton}
-                >
-                  Leeg log
-                </Button>
-                <Button
-                  mode={"contained"}
-                  onPress={exportLog}
-                  style={styles.relatedButton}
-                >
-                  Exporteer log
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-          <Card>
-            <Card.Title title={"Account"} />
-            {authState.authenticated === Authed.AUTHENTICATED && (
-              <Card.Content style={styles.content}>
-                <Text>
-                  {authState.user.given_name} {authState.user.family_name} (
-                  {authState.user.sub})
-                </Text>
-                <Button mode={"contained"} onPress={authState.logout}>
-                  Log uit
-                </Button>
-              </Card.Content>
-            )}
-            {authState.authenticated === Authed.GUEST && (
-              <Card.Content style={styles.content}>
-                <Text>Demo Mode</Text>
-                <Button mode={"contained"} onPress={authState.login}>
-                  Ga uit demo mode
-                </Button>
-              </Card.Content>
-            )}
-          </Card>
+              <Button
+                mode={"contained"}
+                onPress={exportLog}
+                style={styles.relatedButton}
+              >
+                Exporteer log
+              </Button>
+            </View>
+          </Area>
+          <Area title={"Account"} icon={"account"}>
+            <>
+              {authState.authenticated === Authed.AUTHENTICATED && (
+                <>
+                  <Text>
+                    {authState.user.given_name} {authState.user.family_name} (
+                    {authState.user.sub})
+                  </Text>
+                  <Button mode={"contained"} onPress={authState.logout}>
+                    Log uit
+                  </Button>
+                </>
+              )}
+              {authState.authenticated === Authed.GUEST && (
+                <>
+                  <Text>Demo Mode</Text>
+                  <Button mode={"contained"} onPress={authState.login}>
+                    Ga uit demo mode
+                  </Button>
+                </>
+              )}
+            </>
+          </Area>
         </View>
       </ScrollView>
     </>

@@ -8,6 +8,7 @@ import { StackParamList } from "../../../App";
 import AuthContext, { Authed } from "../../auth";
 import { AANMELDEN } from "../../env";
 import PresenceCard from "../../components/register/precenseCard";
+import Area from "../../components/area";
 
 type Props = StackScreenProps<StackParamList, "Slot">;
 
@@ -96,45 +97,29 @@ export default function SlotScreen({ route, navigation }: Props) {
               </Card>
             </>
           )}
-          <View style={styles.header}>
-            <Icon size={22} source={"account"} />
-            <Text variant={"titleMedium"}>Beschikbaarheid</Text>
-          </View>
-          <Card>
-            <Card.Content>
-              <Text variant={"titleSmall"}>
-                Er zijn {slot.available}/{slot.available + slot.taken} plekken
-                beschikbaar.
-              </Text>
-            </Card.Content>
-          </Card>
+          <Area title={"Beschikbaarheid"} icon={"account"}>
+            <Text variant={"titleSmall"}>
+              Er zijn {slot.available}/{slot.available + slot.taken} plekken
+              beschikbaar.
+            </Text>
+          </Area>
 
-          <View style={styles.header}>
-            <Icon size={22} source={"account-supervisor"} />
-            <Text variant={"titleMedium"}>Begeleiders</Text>
-          </View>
-          <Card>
-            <Card.Content style={styles.chips}>
+          <Area title={"Begeleiders"} icon={"account-supervisor"}>
+            <View style={styles.chips}>
               {slot.tutors.length === 0 && (
                 <Text>Er zijn nog geen begeleiders aangemeld</Text>
               )}
               {slot.tutors.map((tutor) => (
                 <Chip key={tutor}>{tutor}</Chip>
               ))}
-            </Card.Content>
-          </Card>
+            </View>
+          </Area>
 
           {slot.presence && (
             <>
-              <View style={styles.header}>
-                <Icon size={22} source={"account-details"} />
-                <Text variant={"titleMedium"}>Leden</Text>
-              </View>
-              <Card>
-                <Card.Content>
-                  <PresenceCard slot={slot} members={members} />
-                </Card.Content>
-              </Card>
+              <Area title={"Leden"} icon={"account-details"}>
+                <PresenceCard slot={slot} members={members} />
+              </Area>
             </>
           )}
         </View>
