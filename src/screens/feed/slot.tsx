@@ -67,32 +67,18 @@ export default function SlotScreen({ route, navigation }: Props) {
         <View style={styles.info}>
           {authState.authenticated === Authed.AUTHENTICATED &&
             authState.user.stripcard && (
-              <>
-                <View style={styles.header}>
-                  <Icon size={22} source={"clipboard-list"} />
-                  <Text variant={"titleMedium"}>Strippenkaart</Text>
-                </View>
-                <Card>
-                  <Card.Content>
-                    <Text variant={"titleSmall"}>
-                      Je strippenkaart is {authState.user.stripcard.used} van de{" "}
-                      {authState.user.stripcard.count} keer gebruikt.
-                    </Text>
-                  </Card.Content>
-                </Card>
-              </>
+              <Area title={"Strippenkaart"} icon={"clipboard-list"}>
+                <Text variant={"titleSmall"}>
+                  Je strippenkaart is {authState.user.stripcard.used} van de{" "}
+                  {authState.user.stripcard.count} keer gebruikt.
+                </Text>
+              </Area>
             )}
           {slot.announcement && (
             <>
-              <View style={styles.header}>
-                <Icon size={22} source={"bullhorn"} />
-                <Text variant={"titleMedium"}>Aankondiging</Text>
-              </View>
-              <Card>
-                <Card.Content>
-                  <Text variant={"titleSmall"}>{slot.announcement}</Text>
-                </Card.Content>
-              </Card>
+              <Area title={"Aankondiging"} icon={"bullhorn"}>
+                <Text variant={"titleSmall"}>{slot.announcement}</Text>
+              </Area>
             </>
           )}
           <Area title={"Beschikbaarheid"} icon={"account"}>
