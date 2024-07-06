@@ -44,7 +44,7 @@ export default function Presence({
     <TouchableOpacity style={styles.presence} onPress={markSeen}>
       <Switch value={seen} onChange={markSeen} />
       <Text>{presence.name}</Text>
-      {presence.stripcard_count && (
+      {!!presence.stripcard_count && (
         <View style={styles.stripcard}>
           <Icon size={22} source={"clipboard-list"} />
           <Text>

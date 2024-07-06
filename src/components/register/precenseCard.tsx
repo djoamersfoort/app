@@ -38,7 +38,7 @@ export default function PresenceCard({
   if (!slot.presence) return;
 
   return (
-    <>
+    <View>
       <PaperSelect
         label={"Lid handmatig aanmelden"}
         arrayList={members
@@ -69,7 +69,7 @@ export default function PresenceCard({
           <Presence key={presence.id} presence={presence} slot={slot} />
         ))}
       </View>
-    </>
+    </View>
   );
 }
 

@@ -19,6 +19,7 @@ import { useAtom } from "jotai";
 import { useContext } from "react";
 import AuthContext, { Authed } from "../../auth";
 import * as WebBrowser from "expo-web-browser";
+import Area from "../../components/area";
 
 function friday() {
   return isFriday(new Date()) ? new Date() : nextFriday(new Date());
@@ -168,19 +169,13 @@ export default function EventScreen({ route, navigation }: Props) {
           </Button>
         )}
         {getDescription() && (
-          <Card>
-            <Card.Title titleVariant={"titleMedium"} title={"Beschrijving"} />
-            <Card.Content>
-              <Text>{getDescription()}</Text>
-            </Card.Content>
-          </Card>
+          <Area title={"Beschrijving"} icon={"information"}>
+            <Text>{getDescription()}</Text>
+          </Area>
         )}
-        <Card>
-          <Card.Title titleVariant={"titleMedium"} title={"Wanneer"} />
-          <Card.Content>
-            <Text>{getDates()}</Text>
-          </Card.Content>
-        </Card>
+        <Area title={"Wanneer"} icon={"calendar"}>
+          <Text>{getDates()}</Text>
+        </Area>
       </View>
     </ScrollView>
   );

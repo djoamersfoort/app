@@ -10,6 +10,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
+import Area from "../area";
 
 type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
 
@@ -38,23 +39,14 @@ export default function Listing() {
   const slots = useAtomValue(slotsAtom);
 
   return (
-    <Card>
-      <Card.Title title={"Aanmelden"} />
-      <Card.Content style={styles.content}>
-        {slots ? (
-          slots.map((slot, index) => (
-            <SlotListing key={index} slot={slot} index={index} />
-          ))
-        ) : (
-          <ActivityIndicator animating={true} />
-        )}
-      </Card.Content>
-    </Card>
+    <Area title={"Aanmelden"} icon={"playlist-check"}>
+      {slots ? (
+        slots.map((slot, index) => (
+          <SlotListing key={index} slot={slot} index={index} />
+        ))
+      ) : (
+        <ActivityIndicator animating={true} />
+      )}
+    </Area>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: 10,
-  },
-});

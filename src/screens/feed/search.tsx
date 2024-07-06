@@ -14,6 +14,7 @@ import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";
 import { parse } from "fast-html-parser";
 import * as WebBrowser from "expo-web-browser";
+import Area from "../../components/area";
 
 export interface Item {
   id: number;
@@ -135,45 +136,39 @@ export default function SearchScreen() {
           >
             {searched && (
               <>
-                <Card>
-                  <Card.Title title={"Inventaris"} />
-                  <Card.Content style={styles.content}>
-                    {itemResults ? (
-                      itemResults.length > 0 ? (
-                        itemResults.map((result, index) => (
-                          <Item key={index} item={result} />
-                        ))
-                      ) : (
-                        <View style={styles.center}>
-                          <Text>Geen producten gevonden</Text>
-                          <Button onPress={orderList} mode={"text"}>
-                            Mis je iets? Bekijk de bestellijst
-                          </Button>
-                        </View>
-                      )
+                <Area title={"Inventaris"} icon={"package-variant-closed"}>
+                  {itemResults ? (
+                    itemResults.length > 0 ? (
+                      itemResults.map((result, index) => (
+                        <Item key={index} item={result} />
+                      ))
                     ) : (
-                      <ActivityIndicator animating={true} />
-                    )}
-                  </Card.Content>
-                </Card>
-                <Card>
-                  <Card.Title title={"Artikelen"} />
-                  <Card.Content style={styles.content}>
-                    {articleResults ? (
-                      articleResults.length > 0 ? (
-                        articleResults.map((result, index) => (
-                          <Item key={index} item={result} />
-                        ))
-                      ) : (
-                        <View style={styles.center}>
-                          <Text>Geen artikelen gevonden</Text>
-                        </View>
-                      )
+                      <View style={styles.center}>
+                        <Text>Geen producten gevonden</Text>
+                        <Button onPress={orderList} mode={"text"}>
+                          Mis je iets? Bekijk de bestellijst
+                        </Button>
+                      </View>
+                    )
+                  ) : (
+                    <ActivityIndicator animating={true} />
+                  )}
+                </Area>
+                <Area title={"Artikelen"} icon={"post"}>
+                  {articleResults ? (
+                    articleResults.length > 0 ? (
+                      articleResults.map((result, index) => (
+                        <Item key={index} item={result} />
+                      ))
                     ) : (
-                      <ActivityIndicator animating={true} />
-                    )}
-                  </Card.Content>
-                </Card>
+                      <View style={styles.center}>
+                        <Text>Geen artikelen gevonden</Text>
+                      </View>
+                    )
+                  ) : (
+                    <ActivityIndicator animating={true} />
+                  )}
+                </Area>
               </>
             )}
           </View>
