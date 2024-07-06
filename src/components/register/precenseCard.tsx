@@ -17,7 +17,6 @@ export default function PresenceCard({
 }) {
   const theme = useTheme();
   const authState = useContext(AuthContext);
-  const setSlots = useSetAtom(slotsAtom);
 
   async function registerManual(user: string) {
     if (authState.authenticated !== Authed.AUTHENTICATED) return;
@@ -31,8 +30,6 @@ export default function PresenceCard({
         },
       },
     );
-
-    setSlots((await getSlots(token)).slots);
   }
 
   if (!slot.presence) return;

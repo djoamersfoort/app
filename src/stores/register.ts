@@ -1,7 +1,10 @@
-import { atom } from "jotai";
-import { nextFriday, nextSaturday } from "date-fns";
-import { AANMELDEN } from "../env";
+import {atom, useSetAtom} from "jotai";
+import {nextFriday, nextSaturday} from "date-fns";
+import {AANMELDEN} from "../env";
 import logging from "../logging";
+import {io} from "socket.io-client";
+import {useContext} from "react";
+import AuthContext, {Authed} from "../auth";
 
 export interface Presence {
   id: number;

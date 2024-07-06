@@ -52,13 +52,11 @@ export default function SlotScreen({ route, navigation }: Props) {
       }
       slot.is_registered = !slot.is_registered;
     }
-
-    setSlots((await getSlots(token)).slots);
-    setLoading(false);
   }
 
   useEffect(() => {
     setSlot(slots[route.params.slot]);
+    setLoading(false);
   }, [slots]);
 
   if (!slot) return <Text>Something went wrong!</Text>;
