@@ -15,7 +15,7 @@ enum Page {
 
 export default function MediaScreen() {
   const authState = useContext(AuthContext);
-  const [api, setApi] = useAtom(apiAtom);
+  const [_api, setApi] = useAtom(apiAtom);
   const [page, setPage] = useState<Page>(Page.ALBUMS);
   const theme = useTheme();
 
@@ -24,9 +24,7 @@ export default function MediaScreen() {
       return setApi(null);
     }
 
-    authState.token.then((token) => {
-      setApi(getApi(token));
-    });
+    setApi(getApi(authState));
   }, [authState]);
 
   return (
