@@ -1,8 +1,8 @@
-import {atom} from "jotai";
-import {nextFriday, nextSaturday} from "date-fns";
-import {AANMELDEN} from "../env";
+import { atom } from "jotai";
+import { nextFriday, nextSaturday } from "date-fns";
+import { AANMELDEN } from "../env";
 import logging from "../logging";
-import {store} from "./store";
+import { store } from "./store";
 
 export interface Presence {
   id: number;
@@ -75,7 +75,11 @@ export async function getSlots(token: string | null) {
   }
 
   logging.log("REGISTER", "Valid token, fetching slots");
-  const { slots, members, dates }: { slots: Slot[]; members?: Member[]; dates?: string[] } = await fetch(
+  const {
+    slots,
+    members,
+    dates,
+  }: { slots: Slot[]; members?: Member[]; dates?: string[] } = await fetch(
     `${AANMELDEN}/api/v1/slots`,
     {
       headers: {
@@ -84,7 +88,7 @@ export async function getSlots(token: string | null) {
     },
   ).then((res) => res.json());
 
-  store.set(slotsAtom, slots)
-  store.set(datesAtom, dates?.map(date => new Date(date)) || [])
+  store.set(slotsAtom, slots);
+  store.set(datesAtom, dates?.map((date) => new Date(date)) || []);
   store.set(membersAtom, members || []);
 }

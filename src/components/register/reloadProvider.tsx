@@ -1,8 +1,8 @@
-import {ReactNode, useContext, useEffect} from "react";
-import AuthContext, {Authed} from "../../auth";
-import {io} from "socket.io-client";
-import {AANMELDEN} from "../../env";
-import {getSlots} from "../../stores/register";
+import { ReactNode, useContext, useEffect } from "react";
+import AuthContext, { Authed } from "../../auth";
+import { io } from "socket.io-client";
+import { AANMELDEN } from "../../env";
+import { getSlots } from "../../stores/register";
 
 export default function ReloadProvider({
   children,

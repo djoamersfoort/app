@@ -71,7 +71,9 @@ export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer
-        theme={colorScheme === "dark" ? CombinedDarkTheme : CombinedDefaultTheme}
+        theme={
+          colorScheme === "dark" ? CombinedDarkTheme : CombinedDefaultTheme
+        }
       >
         <PaperProvider
           theme={

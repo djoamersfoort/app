@@ -35,10 +35,7 @@ export default function CorveeScreen() {
     setRefreshing(true);
 
     const token = await authState.token;
-    await Promise.all([
-      getSlots(token),
-      getStatus(token).then(setState),
-    ]);
+    await Promise.all([getSlots(token), getStatus(token).then(setState)]);
 
     setRefreshing(false);
   }
