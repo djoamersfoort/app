@@ -21,11 +21,7 @@ export default function CorveeScreen() {
 
       const token = await authState.token;
       await Promise.all([
-        !slots &&
-          getSlots(token).then(({ slots, members }) => {
-            setSlots(slots);
-            setMembers(members || []);
-          }),
+        !slots && getSlots(token),
         getStatus(token).then(setState),
       ]);
     }
@@ -39,13 +35,7 @@ export default function CorveeScreen() {
     setRefreshing(true);
 
     const token = await authState.token;
-    await Promise.all([
-      getSlots(token).then(({ slots, members }) => {
-        setSlots(slots);
-        setMembers(members || []);
-      }),
-      getStatus(token).then(setState),
-    ]);
+    await Promise.all([getSlots(token), getStatus(token).then(setState)]);
 
     setRefreshing(false);
   }
