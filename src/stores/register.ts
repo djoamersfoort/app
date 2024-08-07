@@ -71,7 +71,7 @@ export async function getSlots(token: string | null) {
       setTimeout(resolve, Math.random() * 500 + 250),
     );
 
-    return { slots: demoSlots };
+    return store.set(slotsAtom, demoSlots);
   }
 
   logging.log("REGISTER", "Valid token, fetching slots");

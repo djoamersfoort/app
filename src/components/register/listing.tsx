@@ -13,9 +13,10 @@ import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
 import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import nl from "react-native-paper-dates/src/translations/nl";
 import Calendar from "./calendar";
+import AuthContext, { Authed } from "../../auth";
 
 type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
 
@@ -45,6 +46,7 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
 export default function Listing() {
   const slots = useAtomValue(slotsAtom);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const authState = useContext(AuthContext);
 
   return (
     <>
@@ -52,12 +54,15 @@ export default function Listing() {
         title={"Aanmelden"}
         icon={"playlist-check"}
         right={
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setCalendarOpen(true)}
-          >
-            <Icon size={22} source={"calendar"} />
-          </TouchableOpacity>
+          (authState.authenticated === Authed.AUTHENTICATED &&
+            authState.user.account_type.includes("begeleider") && (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => setCalendarOpen(true)}
+              >
+                <Icon size={22} source={"calendar"} />
+              </TouchableOpacity>
+            )) || <></>
         }
       >
         {slots ? (
