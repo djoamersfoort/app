@@ -3,7 +3,13 @@ import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import * as AuthSession from "expo-auth-session";
 import { Alert, Platform, SafeAreaView, StyleSheet, View } from "react-native";
-import { Button, useTheme, Text, ActivityIndicator } from "react-native-paper";
+import {
+  Button,
+  useTheme,
+  Text,
+  ActivityIndicator,
+  Snackbar,
+} from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
 import { DiscoveryDocument } from "expo-auth-session";
 import * as Device from "expo-device";
@@ -276,11 +282,13 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
   const [authenticated, setAuthenticated] = useState<AuthState>({
     authenticated: Authed.LOADING,
   });
+  const [guestWarning, setGuestWarning] = useState(false);
 
   useEffect(() => {
     if (!discovery) return;
     async function getAuthenticated() {
       if (await SecureStore.getItemAsync("guest")) {
+        setGuestWarning(true);
         return setAuthenticated({
           authenticated: Authed.GUEST,
           login: async () => {
@@ -340,6 +348,23 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
             <ActivityIndicator animating={true} />
           </View>
         ))}
+
+      <Snackbar
+        visible={guestWarning}
+        onDismiss={() => setGuestWarning(false)}
+        action={{
+          label: "OK",
+          onPress: () => setGuestWarning(false),
+        }}
+        theme={{
+          colors: {
+            inverseSurface: theme.colors.errorContainer,
+            inverseOnSurface: theme.colors.onErrorContainer,
+          },
+        }}
+      >
+        Demo mode staat aan, acties worden niet bewaard!
+      </Snackbar>
     </AuthContext.Provider>
   );
 }
