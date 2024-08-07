@@ -42,10 +42,7 @@ export default function FeedScreen() {
       new Promise<void>(async (resolve) => {
         setSlots(null);
 
-        const { slots, members } = await getSlots(token);
-        setSlots(slots);
-        setMembers(members || []);
-
+        await getSlots(token);
         resolve();
       }),
       new Promise<void>(async (resolve) => {

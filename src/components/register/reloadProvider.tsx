@@ -1,9 +1,8 @@
-import { ReactNode, useContext, useEffect, useMemo } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { io } from "socket.io-client";
-import { AANMELDEN } from "../../env";
-import { useSetAtom } from "jotai/index";
-import { getSlots, membersAtom, slotsAtom } from "../../stores/register";
+import {ReactNode, useContext, useEffect} from "react";
+import AuthContext, {Authed} from "../../auth";
+import {io} from "socket.io-client";
+import {AANMELDEN} from "../../env";
+import {getSlots} from "../../stores/register";
 
 export default function ReloadProvider({
   children,
@@ -12,17 +11,13 @@ export default function ReloadProvider({
 }) {
   const authState = useContext(AuthContext);
 
-  const setSlots = useSetAtom(slotsAtom);
-  const setMembers = useSetAtom(membersAtom);
   useEffect(() => {
     const socket = io(AANMELDEN);
 
     socket.on("update_report_page", async () => {
       if (authState.authenticated !== Authed.AUTHENTICATED) return;
 
-      const { slots, members } = await getSlots(await authState.token);
-      setSlots(slots);
-      if (members) setMembers(members);
+      await getSlots(await authState.token);
     });
   }, []);
 
