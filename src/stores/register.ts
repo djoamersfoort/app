@@ -78,8 +78,8 @@ export async function getSlots(token: string | null) {
   const {
     slots,
     members,
-    dates,
-  }: { slots: Slot[]; members?: Member[]; dates?: string[] } = await fetch(
+    registered_dates,
+  }: { slots: Slot[]; members?: Member[]; registered_dates?: string[] } = await fetch(
     `${AANMELDEN}/api/v1/slots`,
     {
       headers: {
@@ -89,6 +89,6 @@ export async function getSlots(token: string | null) {
   ).then((res) => res.json());
 
   store.set(slotsAtom, slots);
-  store.set(datesAtom, dates?.map((date) => new Date(date)) || []);
+  store.set(datesAtom, registered_dates?.map((date) => new Date(date)) || []);
   store.set(membersAtom, members || []);
 }
