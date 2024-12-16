@@ -1,5 +1,11 @@
 import { StackScreenProps } from "@react-navigation/stack";
-import {Alert, SafeAreaView, ScrollView, StyleSheet, View} from "react-native";
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Button, Card, Chip, Icon, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
 import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";

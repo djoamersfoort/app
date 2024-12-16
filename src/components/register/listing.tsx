@@ -4,10 +4,13 @@ import {
   ActivityIndicator,
   Avatar,
   Card,
+  Chip,
   Icon,
   IconButton,
+  Text,
+  useTheme,
 } from "react-native-paper";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
@@ -24,6 +27,7 @@ registerTranslation("nl", nl);
 
 function SlotListing({ slot, index }: { slot: Slot; index: number }) {
   const navigation = useNavigation<SlotNavigationProps>();
+  const theme = useTheme();
 
   return (
     <TouchableOpacity
@@ -34,7 +38,26 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
       <Card mode={"contained"}>
         <Card.Title
           title={slot.description}
-          subtitle={`Er zijn ${slot.available} plaatsen beschikbaar`}
+          subtitle={
+            <View style={styles.chips}>
+              <Chip
+                style={{
+                  backgroundColor: theme.colors.backdrop,
+                }}
+                icon={"account-multiple"}
+              >
+                {slot.available}/{slot.available + slot.taken}
+              </Chip>
+              <Chip
+                style={{
+                  backgroundColor: theme.colors.backdrop,
+                }}
+                icon={slot.is_registered ? "check" : "close"}
+              >
+                {slot.is_registered ? "Aangemeld" : "Afwezig"}
+              </Chip>
+            </View>
+          }
           left={(props) => <Avatar.Icon {...props} icon={"calendar-edit"} />}
           right={(props) => <IconButton {...props} icon={"chevron-right"} />}
         />
@@ -84,5 +107,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: -20,
     top: -20,
+  },
+  chips: {
+    flexDirection: "row",
+    gap: 5,
   },
 });
