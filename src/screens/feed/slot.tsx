@@ -1,5 +1,5 @@
 import { StackScreenProps } from "@react-navigation/stack";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import {Alert, SafeAreaView, ScrollView, StyleSheet, View} from "react-native";
 import { Button, Card, Chip, Icon, Text } from "react-native-paper";
 import { useContext, useEffect, useState } from "react";
 import { getSlots, membersAtom, Slot, slotsAtom } from "../../stores/register";
@@ -63,72 +63,74 @@ export default function SlotScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.slot}>
-      <ScrollView>
-        <View style={styles.info}>
-          {authState.authenticated === Authed.AUTHENTICATED &&
-            authState.user.stripcard && (
-              <Area title={"Strippenkaart"} icon={"clipboard-list"}>
-                <Text variant={"titleSmall"}>
-                  Je strippenkaart is {authState.user.stripcard.used} van de{" "}
-                  {authState.user.stripcard.count} keer gebruikt.
-                </Text>
-              </Area>
-            )}
-          {slot.announcement && (
-            <>
-              <Area title={"Aankondiging"} icon={"bullhorn"}>
-                <Text variant={"titleSmall"}>{slot.announcement}</Text>
-              </Area>
-            </>
-          )}
-          <Area title={"Beschikbaarheid"} icon={"account"}>
-            <Text variant={"titleSmall"}>
-              Er zijn {slot.available}/{slot.available + slot.taken} plekken
-              beschikbaar.
-            </Text>
-          </Area>
-
-          <Area title={"Begeleiders"} icon={"account-supervisor"}>
-            <View style={styles.chips}>
-              {slot.tutors.length === 0 && (
-                <Text>Er zijn nog geen begeleiders aangemeld</Text>
+      <SafeAreaView style={styles.content}>
+        <ScrollView>
+          <View style={styles.info}>
+            {authState.authenticated === Authed.AUTHENTICATED &&
+              authState.user.stripcard && (
+                <Area title={"Strippenkaart"} icon={"clipboard-list"}>
+                  <Text variant={"titleSmall"}>
+                    Je strippenkaart is {authState.user.stripcard.used} van de{" "}
+                    {authState.user.stripcard.count} keer gebruikt.
+                  </Text>
+                </Area>
               )}
-              {slot.tutors.map((tutor) => (
-                <Chip key={tutor}>{tutor}</Chip>
-              ))}
-            </View>
-          </Area>
+            {slot.announcement && (
+              <>
+                <Area title={"Aankondiging"} icon={"bullhorn"}>
+                  <Text variant={"titleSmall"}>{slot.announcement}</Text>
+                </Area>
+              </>
+            )}
+            <Area title={"Beschikbaarheid"} icon={"account"}>
+              <Text variant={"titleSmall"}>
+                Er zijn {slot.available}/{slot.available + slot.taken} plekken
+                beschikbaar.
+              </Text>
+            </Area>
 
-          {slot.presence && (
-            <>
-              <Area title={"Leden"} icon={"account-details"}>
-                <PresenceCard slot={slot} members={members} />
-              </Area>
-            </>
-          )}
+            <Area title={"Begeleiders"} icon={"account-supervisor"}>
+              <View style={styles.chips}>
+                {slot.tutors.length === 0 && (
+                  <Text>Er zijn nog geen begeleiders aangemeld</Text>
+                )}
+                {slot.tutors.map((tutor) => (
+                  <Chip key={tutor}>{tutor}</Chip>
+                ))}
+              </View>
+            </Area>
+
+            {slot.presence && (
+              <>
+                <Area title={"Leden"} icon={"account-details"}>
+                  <PresenceCard slot={slot} members={members} />
+                </Area>
+              </>
+            )}
+          </View>
+        </ScrollView>
+        <View>
+          <Button
+            style={styles.button}
+            labelStyle={{ fontSize: 17 }}
+            disabled={
+              loading ||
+              (!slot.is_registered &&
+                slot.available === 0 &&
+                !(
+                  authState.authenticated === Authed.AUTHENTICATED &&
+                  authState.user.account_type.includes("begeleider")
+                ))
+            }
+            loading={loading}
+            contentStyle={{ height: 50 }}
+            mode={slot.is_registered ? "outlined" : "contained"}
+            onPress={register}
+          >
+            {slot.is_registered ? "Afmelden" : "Aanmelden"}
+          </Button>
         </View>
-      </ScrollView>
-      <View>
-        <Button
-          style={styles.button}
-          labelStyle={{ fontSize: 17 }}
-          disabled={
-            loading ||
-            (!slot.is_registered &&
-              slot.available === 0 &&
-              !(
-                authState.authenticated === Authed.AUTHENTICATED &&
-                authState.user.account_type.includes("begeleider")
-              ))
-          }
-          loading={loading}
-          contentStyle={{ height: 50 }}
-          mode={slot.is_registered ? "outlined" : "contained"}
-          onPress={register}
-        >
-          {slot.is_registered ? "Afmelden" : "Aanmelden"}
-        </Button>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -136,10 +138,13 @@ export default function SlotScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   slot: {
     flex: 1,
-    flexDirection: "column",
-    justifyContent: "space-between",
     padding: 10,
     paddingTop: 0,
+  },
+  content: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
   info: {
     gap: 10,
