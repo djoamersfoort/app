@@ -88,6 +88,16 @@ export default function SlotScreen({ route, navigation }: Props) {
                 </Area>
               </>
             )}
+            <Area title={"Datum"} icon={"calendar"}>
+              <Text variant={"titleSmall"}>
+                Je bent je aan het aanmelden voor{" "}
+                {new Date(slot.date).toLocaleDateString("nl-NL", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
+              </Text>
+            </Area>
             <Area title={"Beschikbaarheid"} icon={"account"}>
               <Text variant={"titleSmall"}>
                 Er zijn {slot.available}/{slot.available + slot.taken} plekken
