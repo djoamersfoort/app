@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
 import Preview from "./preview";
 import { ActivityIndicator } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Albums() {
   const [albums, setAlbums] = useState<AlbumList[] | null>(null);
   const [api] = useAtom(apiAtom);
+  const navigation = useNavigation();
 
   useEffect(() => {
     async function getAlbums() {
@@ -17,6 +19,8 @@ export default function Albums() {
       const { data: albums } = await api.albums.getAlbums();
       setAlbums(albums.sort((a, b) => a.order - b.order));
     }
+
+    navigation.addListener("focus", getAlbums);
 
     getAlbums().then();
   }, [api]);

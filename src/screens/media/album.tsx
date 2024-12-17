@@ -11,7 +11,14 @@ import { useAtom } from "jotai";
 import { apiAtom } from "../../stores/media";
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
-import { ActivityIndicator, Appbar } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Appbar,
+  Button,
+  Dialog,
+  Portal,
+  Text,
+} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { NativeStackNavigationEventMap } from "react-native-screens/lib/typescript/native-stack/types";
@@ -26,6 +33,7 @@ export default function AlbumScreen({ route }: Props) {
   const authState = useContext(AuthContext);
   const [api] = useAtom(apiAtom);
   const [album, setAlbum] = useState<Album>();
+  const [uploadVisible, setUploadVisible] = useState<boolean>(false);
 
   const [_cameraStatus, requestPermissions, getPermissions] =
     ImagePicker.useCameraPermissions();
@@ -33,6 +41,7 @@ export default function AlbumScreen({ route }: Props) {
   async function upload(images: ImagePicker.ImagePickerAsset[]) {
     if (authState.authenticated !== Authed.AUTHENTICATED || !api) return;
 
+    setUploadVisible(true);
     const formData = new FormData();
     images.forEach((asset) => {
       // @ts-ignore
@@ -56,6 +65,7 @@ export default function AlbumScreen({ route }: Props) {
 
     const { data } = await api.albums.getAlbum(route.params.album);
     setAlbum(data);
+    setUploadVisible(false);
   }
 
   async function selectImages() {
@@ -106,6 +116,11 @@ export default function AlbumScreen({ route }: Props) {
           </>
         ),
       } as Partial<NativeStackNavigationEventMap>);
+
+      navigation.addListener("focus", async () => {
+        const { data: album } = await api.albums.getAlbum(route.params.album);
+        setAlbum(album);
+      });
       const { data: album } = await api.albums.getAlbum(route.params.album);
       setAlbum(album);
     }
@@ -116,22 +131,42 @@ export default function AlbumScreen({ route }: Props) {
   function openImage(image: number) {
     if (!album) return;
 
-    navigation.navigate("Slides", { items: album.items, item: image });
+    navigation.navigate("Slides", {
+      album: album.id,
+      items: album.items,
+      item: image,
+    });
   }
 
   if (!album) return <ActivityIndicator animating={true} />;
   return (
-    <FlatList
-      numColumns={3}
-      initialNumToRender={3}
-      data={album.items}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item, index }) => (
-        <TouchableOpacity style={styles.item} onPress={() => openImage(index)}>
-          <Image source={{ uri: item.cover_path }} style={styles.image} />
-        </TouchableOpacity>
-      )}
-    />
+    <>
+      <FlatList
+        numColumns={3}
+        initialNumToRender={3}
+        data={album.items}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => openImage(index)}
+          >
+            <Image source={{ uri: item.cover_path }} style={styles.image} />
+          </TouchableOpacity>
+        )}
+      />
+      <Portal>
+        <Dialog visible={uploadVisible}>
+          <Dialog.Title>Uploaden...</Dialog.Title>
+          <Dialog.Content>
+            <ActivityIndicator animating={true} />
+            <Text variant="bodyMedium">
+              Bezig met uploaden, dit kan even duren...
+            </Text>
+          </Dialog.Content>
+        </Dialog>
+      </Portal>
+    </>
   );
 }
 

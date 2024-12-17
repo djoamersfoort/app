@@ -48,7 +48,7 @@ export type StackParamList = {
   Slot: { slot: number; title: string };
   Album: { album: string; title: string };
   Smoel: { smoel: string; title: string };
-  Slides: { items: Item[]; item: number };
+  Slides: { album?: string; items: Item[]; item: number };
   Web: { source: string; title: string };
   Search: undefined;
   Item: { item: InventoryItem; title: string };
