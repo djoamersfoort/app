@@ -1,7 +1,4 @@
-import { useContext, useEffect, useState } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import { apiAtom, getApi } from "../../stores/media";
+import { useState } from "react";
 import { StyleSheet } from "react-native";
 import { Appbar, SegmentedButtons } from "react-native-paper";
 import { useTheme } from "@react-navigation/native";
@@ -14,18 +11,8 @@ enum Page {
 }
 
 export default function MediaScreen() {
-  const authState = useContext(AuthContext);
-  const [_api, setApi] = useAtom(apiAtom);
   const [page, setPage] = useState<Page>(Page.ALBUMS);
   const theme = useTheme();
-
-  useEffect(() => {
-    if (authState.authenticated !== Authed.AUTHENTICATED) {
-      return setApi(null);
-    }
-
-    setApi(getApi(authState));
-  }, [authState]);
 
   return (
     <>

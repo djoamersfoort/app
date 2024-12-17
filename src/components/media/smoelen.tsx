@@ -1,5 +1,4 @@
-import { useAtom } from "jotai";
-import { apiAtom } from "../../stores/media";
+import { useApi } from "../../stores/media";
 import { SmoelAlbumList } from "../../__generated__/media";
 import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
@@ -8,7 +7,7 @@ import Preview from "./preview";
 
 export default function Smoelen() {
   const [smoelen, setSmoelen] = useState<SmoelAlbumList[] | null>(null);
-  const [api] = useAtom(apiAtom);
+  const api = useApi();
 
   useEffect(() => {
     async function getSmoelen() {

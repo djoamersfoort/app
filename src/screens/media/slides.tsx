@@ -1,13 +1,12 @@
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
-import { Alert, Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import { Appbar, Button, Dialog, Portal, Text } from "react-native-paper";
-import { apiAtom } from "../../stores/media";
-import { useAtomValue } from "jotai";
+import { useApi } from "../../stores/media";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { User } from "../../__generated__/media";
 
@@ -19,7 +18,7 @@ export default function SlidesScreen({ route }: Props) {
   const [page, setPage] = useState(item);
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const api = useAtomValue(apiAtom);
+  const api = useApi();
   const navigation = useNavigation<NavigationProps>();
 
   const [user, setUser] = useState<User>({ id: "", admin: false });

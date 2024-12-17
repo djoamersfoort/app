@@ -1,8 +1,7 @@
-import { atom } from "jotai";
 import { Api } from "../__generated__/media";
-import { Authed, AuthState } from "../auth";
+import AuthContext, { Authed, AuthState } from "../auth";
+import { useContext, useMemo } from "react";
 
-export const apiAtom = atom<Api<unknown> | null>(null);
 export function getApi(authState: AuthState) {
   return new Api({
     baseUrl: "https://media.djoamersfoort.nl/api",
@@ -24,4 +23,14 @@ export function getApi(authState: AuthState) {
       return fetch(...fetchParams);
     },
   });
+}
+export function useApi() {
+  const authState = useContext(AuthContext);
+  return useMemo(() => {
+    if (authState.authenticated !== Authed.AUTHENTICATED) {
+      return null;
+    }
+
+    return getApi(authState);
+  }, [authState]);
 }

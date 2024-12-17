@@ -2,10 +2,9 @@ import { FlatList, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
 import { useEffect, useState } from "react";
-import { useAtom } from "jotai/index";
-import { apiAtom } from "../../stores/media";
+import { useApi } from "../../stores/media";
 import { SmoelAlbum } from "../../__generated__/media";
-import { ActivityIndicator, Text } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 
@@ -15,7 +14,7 @@ type NavigationProps = NativeStackNavigationProp<StackParamList>;
 export default function Smoel({ route }: Props) {
   const navigation = useNavigation<NavigationProps>();
   const [smoel, setSmoel] = useState<SmoelAlbum>();
-  const [api] = useAtom(apiAtom);
+  const api = useApi();
   useEffect(() => {
     async function getSmoel() {
       if (!api) return;

@@ -1,20 +1,18 @@
 import {
+  Alert,
   FlatList,
+  Image,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  Alert,
 } from "react-native";
 import { useContext, useEffect, useState } from "react";
 import { Album } from "../../__generated__/media";
-import { useAtom } from "jotai";
-import { apiAtom } from "../../stores/media";
+import { useApi } from "../../stores/media";
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
 import {
   ActivityIndicator,
   Appbar,
-  Button,
   Dialog,
   Portal,
   Text,
@@ -31,7 +29,7 @@ type NavigationProps = NativeStackNavigationProp<StackParamList>;
 export default function AlbumScreen({ route }: Props) {
   const navigation = useNavigation<NavigationProps>();
   const authState = useContext(AuthContext);
-  const [api] = useAtom(apiAtom);
+  const api = useApi();
   const [album, setAlbum] = useState<Album>();
   const [uploadVisible, setUploadVisible] = useState<boolean>(false);
 
@@ -106,6 +104,7 @@ export default function AlbumScreen({ route }: Props) {
 
   useEffect(() => {
     async function fetchAlbum() {
+      console.log(api);
       if (!api) return;
 
       navigation.setOptions({

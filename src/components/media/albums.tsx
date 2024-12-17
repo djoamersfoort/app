@@ -1,5 +1,4 @@
-import { useAtom } from "jotai";
-import { apiAtom } from "../../stores/media";
+import { useApi } from "../../stores/media";
 import { AlbumList } from "../../__generated__/media";
 import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
@@ -9,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 
 export default function Albums() {
   const [albums, setAlbums] = useState<AlbumList[] | null>(null);
-  const [api] = useAtom(apiAtom);
+  const api = useApi();
   const navigation = useNavigation();
 
   useEffect(() => {
