@@ -19,6 +19,7 @@ import { CLIENT_ID, LEDEN_ADMIN, SCOPES } from "./env";
 import logging from "./logging";
 
 const redirectUri = AuthSession.makeRedirectUri({ path: "redirect" });
+logging.log("AUTH", redirectUri);
 WebBrowser.maybeCompleteAuthSession();
 
 export enum Authed {

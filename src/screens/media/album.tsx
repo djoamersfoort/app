@@ -104,7 +104,6 @@ export default function AlbumScreen({ route }: Props) {
 
   useEffect(() => {
     async function fetchAlbum() {
-      console.log(api);
       if (!api) return;
 
       navigation.setOptions({
