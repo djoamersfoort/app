@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -32,7 +32,7 @@ jobs:
           eas-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build app for Android
         run: eas build --output ./android.aab --platform android ${{ env.EAS_BUILD_ARGS }}
