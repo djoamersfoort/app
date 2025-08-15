@@ -8,7 +8,7 @@ import {
 } from "react-native-paper";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";

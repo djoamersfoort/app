@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import * as AuthSession from "expo-auth-session";
 import { Alert, Platform, StyleSheet, View } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
   useTheme,
