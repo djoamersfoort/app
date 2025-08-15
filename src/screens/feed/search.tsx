@@ -1,14 +1,14 @@
 import {
   ActivityIndicator,
   Button,
-  Card,
   Icon,
   Searchbar,
   Text,
   useTheme,
 } from "react-native-paper";
 import { useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";
