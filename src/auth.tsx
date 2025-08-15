@@ -1,8 +1,9 @@
-import { createContext, ReactNode, useState, JSX, useEffect } from "react";
+import { createContext, useState, JSX, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import * as AuthSession from "expo-auth-session";
-import { Alert, Platform, SafeAreaView, StyleSheet, View } from "react-native";
+import { Alert, Platform, StyleSheet, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   useTheme,

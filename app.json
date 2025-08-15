@@ -34,6 +34,7 @@
       }
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "package": "nl.djoamersfoort.djo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
