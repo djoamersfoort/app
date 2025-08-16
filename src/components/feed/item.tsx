@@ -2,11 +2,10 @@ import { ActionType, FeedItem } from "../../stores/feed";
 import { TouchableOpacity } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Avatar, Card, IconButton } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { StackParamList } from "../../../App";
 
-type NavigationProps = NativeStackNavigationProp<StackParamList>;
+type NavigationProps = NavigationProp<StackParamList>;
 
 export default function Item({ item }: { item: FeedItem }) {
   const navigation = useNavigation<NavigationProps>();

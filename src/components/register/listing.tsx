@@ -12,7 +12,7 @@ import {
 } from "react-native-paper";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
+import { NavigationProp } from "@react-navigation/native";
 import { StackParamList } from "../../../App";
 import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
@@ -21,7 +21,7 @@ import nl from "react-native-paper-dates/src/translations/nl";
 import Calendar from "./calendar";
 import AuthContext, { Authed } from "../../auth";
 
-type SlotNavigationProps = NativeStackNavigationProp<StackParamList>;
+type SlotNavigationProps = NavigationProp<StackParamList>;
 
 registerTranslation("nl", nl);
 

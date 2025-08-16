@@ -3,15 +3,14 @@ import { StackParamList } from "../../../App";
 import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import { useEffect, useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import { Appbar, Button, Dialog, Portal, Text } from "react-native-paper";
 import { useApi } from "../../stores/media";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { User } from "../../__generated__/media";
 
 type Props = StackScreenProps<StackParamList, "Slides">;
-type NavigationProps = NativeStackNavigationProp<StackParamList>;
+type NavigationProps = NavigationProp<StackParamList>;
 
 export default function SlidesScreen({ route }: Props) {
   const { album, items, item } = route.params;

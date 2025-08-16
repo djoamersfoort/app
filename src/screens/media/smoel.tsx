@@ -5,11 +5,10 @@ import { useEffect, useState } from "react";
 import { useApi } from "../../stores/media";
 import { SmoelAlbum } from "../../__generated__/media";
 import { ActivityIndicator } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 
 type Props = StackScreenProps<StackParamList, "Smoel">;
-type NavigationProps = NativeStackNavigationProp<StackParamList>;
+type NavigationProps = NavigationProp<StackParamList>;
 
 export default function Smoel({ route }: Props) {
   const navigation = useNavigation<NavigationProps>();
