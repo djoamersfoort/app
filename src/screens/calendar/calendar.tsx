@@ -1,4 +1,4 @@
-import { Appbar, Button, Card, Icon, Text } from "react-native-paper";
+import { Appbar, Button } from "react-native-paper";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import DateTimePicker, {
   DateTimePickerAndroid,

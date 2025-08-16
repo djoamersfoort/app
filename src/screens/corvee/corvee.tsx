@@ -4,7 +4,7 @@ import { getSlots, membersAtom, slotsAtom } from "../../stores/register";
 import AuthContext, { Authed } from "../../auth";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Appbar, Icon, Text } from "react-native-paper";
-import { CorveeState, getStatus, stateAtom } from "../../stores/corvee";
+import { getStatus, stateAtom } from "../../stores/corvee";
 import Create from "../../components/corvee/Create";
 import Selected from "../../components/corvee/Selected";
 

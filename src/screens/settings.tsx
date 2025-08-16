@@ -1,9 +1,8 @@
 import { useContext } from "react";
 import AuthContext, { Authed } from "../auth";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Appbar, Button, Card, Text } from "react-native-paper";
+import { Appbar, Button, Text } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
-import auth from "../auth";
 import logging from "../logging";
 import * as Sharing from "expo-sharing";
 import Area from "../components/area";

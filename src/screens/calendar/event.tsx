@@ -2,7 +2,7 @@ import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { deserializeComponent, VEvent } from "unfucked-ical";
-import { Button, Card, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { convert } from "html-to-text";
 import {
   format,

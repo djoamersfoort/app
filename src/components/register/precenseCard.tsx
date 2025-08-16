@@ -1,12 +1,11 @@
-import { Card, Surface, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 import { PaperSelect } from "react-native-paper-select";
 import { StyleSheet, View } from "react-native";
 import Presence from "./presence";
-import { getSlots, Member, Slot, slotsAtom } from "../../stores/register";
+import { Member, Slot } from "../../stores/register";
 import AuthContext, { Authed } from "../../auth";
 import { AANMELDEN } from "../../env";
 import { useContext } from "react";
-import { useSetAtom } from "jotai";
 
 export default function PresenceCard({
   slot,

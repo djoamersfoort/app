@@ -4,7 +4,7 @@ import { CorveeProfile, getStatus, stateAtom } from "../../stores/corvee";
 import { useContext, useState } from "react";
 import AuthContext, { Authed } from "../../auth";
 import { CORVEE } from "../../env";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 
 enum Action {
   ACKNOWLEDGE = "ack",
