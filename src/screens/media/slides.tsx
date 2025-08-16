@@ -4,7 +4,7 @@ import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import { useEffect, useState } from "react";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { ResizeMode, Video } from "expo-av";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Appbar, Button, Dialog, Portal, Text } from "react-native-paper";
 import { useApi } from "../../stores/media";
 import { User } from "../../__generated__/media";
@@ -92,11 +92,12 @@ export default function SlidesScreen({ route }: Props) {
               (item.type === 1 ? (
                 <Image style={styles.image} source={{ uri: item.path }} />
               ) : (
-                <Video
+                <VideoView
                   style={styles.image}
-                  source={{ uri: item.path }}
-                  useNativeControls
-                  resizeMode={ResizeMode.CONTAIN}
+                  player={useVideoPlayer(item.path, (video) => {
+                    video.play();
+                  })}
+                  allowsFullscreen={true}
                 />
               ))}
           </View>

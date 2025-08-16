@@ -61,7 +61,8 @@
           "microphonePermission": "Allows you to upload media"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-video"
     ],
     "extra": {
       "eas": {
