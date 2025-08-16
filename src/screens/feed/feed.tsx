@@ -12,12 +12,11 @@ import {
 } from "../../stores/feed";
 import { getSlots, slotsAtom, membersAtom } from "../../stores/register";
 import AuthContext, { Authed } from "../../auth";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
 import { StackParamList } from "../../../App";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 import logging from "../../logging";
 
-type NavigationProps = NativeStackNavigationProp<StackParamList, "Search">;
+type NavigationProps = NavigationProp<StackParamList, "Search">;
 
 export default function FeedScreen() {
   const navigation = useNavigation<NavigationProps>();

@@ -2,10 +2,10 @@ import { AlbumList, SmoelAlbumList } from "../../__generated__/media";
 import { Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
+import { NavigationProp } from "@react-navigation/native";
 import { StackParamList } from "../../../App";
 
-type NavigationProps = NativeStackNavigationProp<StackParamList>;
+type NavigationProps = NavigationProp<StackParamList>;
 
 export default function Preview({
   album,

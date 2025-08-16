@@ -17,14 +17,12 @@ import {
   Portal,
   Text,
 } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "react-native-screens/native-stack";
-import { NativeStackNavigationEventMap } from "react-native-screens/lib/typescript/native-stack/types";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import AuthContext, { Authed } from "../../auth";
 
 type Props = StackScreenProps<StackParamList, "Album">;
-type NavigationProps = NativeStackNavigationProp<StackParamList>;
+type NavigationProps = NavigationProp<StackParamList>;
 
 export default function AlbumScreen({ route }: Props) {
   const navigation = useNavigation<NavigationProps>();
@@ -68,7 +66,7 @@ export default function AlbumScreen({ route }: Props) {
 
   async function selectImages() {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ["images", "videos", "livePhotos"],
       allowsMultipleSelection: true,
     });
     if (result.canceled) return;
@@ -94,7 +92,7 @@ export default function AlbumScreen({ route }: Props) {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ["images", "videos", "livePhotos"],
       allowsMultipleSelection: true,
     });
     if (result.canceled) return;
@@ -113,7 +111,7 @@ export default function AlbumScreen({ route }: Props) {
             <Appbar.Action icon={"camera"} onPress={captureImages} />
           </>
         ),
-      } as Partial<NativeStackNavigationEventMap>);
+      });
 
       navigation.addListener("focus", async () => {
         const { data: album } = await api.albums.getAlbum(route.params.album);
