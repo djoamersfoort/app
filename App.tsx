@@ -31,7 +31,7 @@ import "./src/logging";
 import ReloadProvider from "./src/components/register/reloadProvider";
 import { Provider } from "jotai";
 import { store } from "./src/stores/store";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
