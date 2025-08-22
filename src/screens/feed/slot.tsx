@@ -64,7 +64,7 @@ export default function SlotScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.slot}>
-      <SafeAreaView style={styles.content}>
+      <SafeAreaView style={styles.content} edges={['right', 'bottom', 'left']}>
         <ScrollView>
           <View style={styles.info}>
             {authState.authenticated === Authed.AUTHENTICATED &&
