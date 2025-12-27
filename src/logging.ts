@@ -1,6 +1,6 @@
-import * as FileSystem from "expo-file-system";
+import { Directory, File, Paths } from 'expo-file-system';
 
-const LOG_DIRECTORY = `${FileSystem.documentDirectory}logs`;
+const logDirectory = new Directory(Paths.document, "logs");
 
 class Logging {
   private _log = "";
@@ -18,33 +18,21 @@ class Logging {
   }
 
   async ensureExists() {
-    const { exists } = await FileSystem.getInfoAsync(LOG_DIRECTORY);
-    if (exists) return;
-
-    await FileSystem.makeDirectoryAsync(LOG_DIRECTORY);
+    logDirectory.create({idempotent: true});
   }
 
   async loadLog() {
     await this.ensureExists();
+    for (const item of logDirectory.list()) {
+      if (item.name.endsWith(".txt")) {
+        const logFile = new File(item.uri);
+        const contents = await logFile.text();
 
-    const logFiles = await FileSystem.readDirectoryAsync(LOG_DIRECTORY);
-    const [log] = logFiles
-      .filter((file) => file.endsWith(".txt"))
-      .map((file) => ({
-        date: new Date(file.split(".").at(-1) || new Date()).getTime(),
-        file,
-      }))
-      .sort((a, b) => a.date - b.date);
-
-    if (!log) return false;
-
-    const contents = await FileSystem.readAsStringAsync(
-      `${LOG_DIRECTORY}/${log.file}`,
-    );
-    this.currentFile = `${LOG_DIRECTORY}/${log.file}`;
-    this._log = contents + this._log;
-    this.limitSize();
-
+        this.currentFile = item.uri;
+        this._log = contents + this._log;
+        this.limitSize();
+      }
+    }
     return true;
   }
 
@@ -52,21 +40,15 @@ class Logging {
     await this.ensureExists();
 
     const name = `log.${new Date().getTime()}.txt`;
-    const temp = `${LOG_DIRECTORY}/${name}`;
+    const logFile = new File(logDirectory.uri, name);
+    logFile.create();
+    logFile.write(this.export());
 
-    await FileSystem.writeAsStringAsync(temp, this.export());
-
-    this.currentFile = `${LOG_DIRECTORY}/${name}`;
-    const logs = await FileSystem.readDirectoryAsync(LOG_DIRECTORY);
-    await Promise.all(
-      logs.map(async (log) => {
-        if (log === name) return;
-
-        try {
-          await FileSystem.deleteAsync(`${LOG_DIRECTORY}/${log}`);
-        } catch {}
-      }),
-    );
+    this.currentFile = logFile.uri;
+    for (const item of logDirectory.list()) {
+      if (item.name === name) continue;
+      new File(item.uri).delete();
+    }
   }
 
   async clear() {
