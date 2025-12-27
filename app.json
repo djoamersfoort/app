@@ -3,7 +3,7 @@
     "name": "djo",
     "slug": "djo",
     "scheme": "djo",
-    "version": "1.7.5",
+    "version": "1.7.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -46,7 +46,7 @@
         }
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 21
+      "versionCode": 22
     },
     "web": {
       "favicon": "./assets/favicon.png"

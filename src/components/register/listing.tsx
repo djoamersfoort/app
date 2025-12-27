@@ -7,12 +7,11 @@ import {
   Chip,
   Icon,
   IconButton,
-  Text,
+  MD3Colors,
   useTheme,
 } from "react-native-paper";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { NavigationProp } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { StackParamList } from "../../../App";
 import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
@@ -46,14 +45,12 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
                 }}
                 icon={"account-multiple"}
               >
-                {slot.available}/{slot.available + slot.taken}
-              </Chip>
-              <Chip
-                style={{
-                  backgroundColor: theme.colors.backdrop,
-                }}
-                icon={slot.is_registered ? "check" : "close"}
-              >
+                {slot.available}/{slot.available + slot.taken} &nbsp;
+                <Icon
+                  color={theme.colors.primary}
+                  size={16}
+                  source={slot.is_registered ? "check" : "close"}
+                />
                 {slot.is_registered ? "Aangemeld" : "Afwezig"}
               </Chip>
             </View>
@@ -110,6 +107,5 @@ const styles = StyleSheet.create({
   },
   chips: {
     flexDirection: "row",
-    gap: 5,
   },
 });
