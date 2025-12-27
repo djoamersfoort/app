@@ -1,4 +1,4 @@
-import { Directory, File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from "expo-file-system";
 
 const logDirectory = new Directory(Paths.document, "logs");
 
@@ -18,7 +18,7 @@ class Logging {
   }
 
   async ensureExists() {
-    logDirectory.create({idempotent: true});
+    logDirectory.create({ idempotent: true });
   }
 
   async loadLog() {
