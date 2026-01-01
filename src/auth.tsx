@@ -137,17 +137,18 @@ function createAuthState(
     authenticated: Authed.AUTHENTICATED,
     user: jwtDecode(token),
     async logout() {
+      logging.log("AUTH", "Logging out.");
       await SecureStore.deleteItemAsync("id_token");
       await SecureStore.deleteItemAsync("refresh_token");
       await SecureStore.deleteItemAsync("expiration_date");
       setState({ authenticated: Authed.UNAUTHENTICATED });
     },
     get token() {
-      return new Promise<string>(async (resolve) => {
+      return new Promise<string>(async (resolve, reject) => {
         if (expiry > Date.now()) return resolve(token);
 
         logging.log("AUTH", "Refreshing tokens");
-        const tokens: TokenResponse = await fetch(discovery?.tokenEndpoint!, {
+        const response = await fetch(discovery?.tokenEndpoint!, {
           method: "post",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -157,8 +158,19 @@ function createAuthState(
             client_id: CLIENT_ID,
             refresh_token: refresh,
           }).toString(),
-        }).then((res) => res.json());
-
+        });
+        if (response.status >= 400 && response.status <= 403) {
+          // Refresh token expired -> Re-login to get a new one
+          await state.logout();
+        }
+        if (!response.ok) {
+          logging.log(
+            "AUTH",
+            `Token refresh failed with status ${response.status}.`,
+          );
+          return reject(new Error("Session expired"));
+        }
+        const tokens: TokenResponse = await response.json();
         token = tokens.id_token;
         expiry = Date.now() + tokens.expires_in * 1000;
 
