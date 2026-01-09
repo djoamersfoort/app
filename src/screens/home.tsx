@@ -64,8 +64,8 @@ export default function HomeScreen() {
         component={FeedScreen}
         options={{
           tabBarLabel: "Home",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="home" color={color} size={26} />
+          tabBarIcon: (props) => (
+            <MaterialCommunityIcons name="home" {...props} />
           ),
         }}
       />
@@ -74,8 +74,8 @@ export default function HomeScreen() {
         component={CalendarScreen}
         options={{
           tabBarLabel: "Agenda",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="calendar" color={color} size={26} />
+          tabBarIcon: (props) => (
+            <MaterialCommunityIcons name="calendar" {...props} />
           ),
         }}
       />
@@ -86,12 +86,8 @@ export default function HomeScreen() {
             component={CorveeScreen}
             options={{
               tabBarLabel: "Corvee",
-              tabBarIcon: ({ color }) => (
-                <MaterialCommunityIcons
-                  name="clipboard-list"
-                  color={color}
-                  size={26}
-                />
+              tabBarIcon: (props) => (
+                <MaterialCommunityIcons name="clipboard-list" {...props} />
               ),
             }}
           />
@@ -102,8 +98,8 @@ export default function HomeScreen() {
           component={MediaScreen}
           options={{
             tabBarLabel: "Media",
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="video" color={color} size={26} />
+            tabBarIcon: (props) => (
+              <MaterialCommunityIcons name="video" {...props} />
             ),
           }}
         />
@@ -113,8 +109,8 @@ export default function HomeScreen() {
         component={SettingsScreen}
         options={{
           tabBarLabel: "Instellingen",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="cog" color={color} size={26} />
+          tabBarIcon: (props) => (
+            <MaterialCommunityIcons name="cog" {...props} />
           ),
         }}
       />
