@@ -155,15 +155,13 @@ async function refreshAccessToken(
     }
 
     const tokens: TokenResponse = await response.json();
-
-    // Update de lokale variabelen in de closure
     const token = tokens.id_token;
     const expiry = Date.now() + tokens.expires_in * 1000;
 
     await SecureStore.setItemAsync("id_token", token);
     await SecureStore.setItemAsync("expiration_date", expiry.toString());
     if (tokens.refresh_token) {
-      const refresh = tokens.refresh_token;
+      refresh = tokens.refresh_token;
       await SecureStore.setItemAsync("refresh_token", refresh);
     }
 
