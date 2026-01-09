@@ -126,6 +126,57 @@ async function registerForPushNotifications(user: AuthenticatedState) {
   });
 }
 
+async function refreshAccessToken(
+  discovery: DiscoveryDocument,
+  refresh: string,
+  state: AuthenticatedState,
+) {
+  try {
+    logging.log("AUTH", "Refreshing tokens...");
+    const response = await fetch(discovery?.tokenEndpoint!, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: CLIENT_ID,
+        refresh_token: refresh,
+      }).toString(),
+    });
+
+    if (response.status >= 400 && response.status <= 403) {
+      await state.logout();
+      throw new Error("Session expired");
+    }
+
+    if (!response.ok) {
+      throw new Error(`Token refresh failed: ${response.status}`);
+    }
+
+    const tokens: TokenResponse = await response.json();
+
+    // Update de lokale variabelen in de closure
+    const token = tokens.id_token;
+    const expiry = Date.now() + tokens.expires_in * 1000;
+
+    await SecureStore.setItemAsync("id_token", token);
+    await SecureStore.setItemAsync("expiration_date", expiry.toString());
+    if (tokens.refresh_token) {
+      const refresh = tokens.refresh_token;
+      await SecureStore.setItemAsync("refresh_token", refresh);
+    }
+
+    logging.log("AUTH", "Finished refreshing tokens");
+    return { refresh, token, expiry };
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+// Promise to prevent multiple concurrent refreshes
+let refreshPromise: Promise<string> | null = null;
+
 function createAuthState(
   setState: (state: AuthState) => void,
   discovery: DiscoveryDocument,
@@ -144,46 +195,25 @@ function createAuthState(
       setState({ authenticated: Authed.UNAUTHENTICATED });
     },
     get token() {
-      return new Promise<string>(async (resolve, reject) => {
-        if (expiry > Date.now()) return resolve(token);
+      // When already refreshing, return the promise
+      if (refreshPromise) {
+        return refreshPromise;
+      }
 
-        logging.log("AUTH", "Refreshing tokens");
-        const response = await fetch(discovery?.tokenEndpoint!, {
-          method: "post",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            grant_type: "refresh_token",
-            client_id: CLIENT_ID,
-            refresh_token: refresh,
-          }).toString(),
-        });
-        if (response.status >= 400 && response.status <= 403) {
-          // Refresh token expired -> Re-login to get a new one
-          await state.logout();
-        }
-        if (!response.ok) {
-          logging.log(
-            "AUTH",
-            `Token refresh failed with status ${response.status}.`,
-          );
-          return reject(new Error("Session expired"));
-        }
-        const tokens: TokenResponse = await response.json();
-        token = tokens.id_token;
-        expiry = Date.now() + tokens.expires_in * 1000;
+      // When token still valid, return it right away
+      if (expiry > Date.now()) {
+        return Promise.resolve(token);
+      }
 
-        await SecureStore.setItemAsync("id_token", token);
-        await SecureStore.setItemAsync("expiration_date", expiry.toString());
-        if (tokens.refresh_token) {
-          refresh = tokens.refresh_token;
-          await SecureStore.setItemAsync("refresh_token", refresh);
-        }
-
-        logging.log("AUTH", "Finished refreshing tokens");
-        resolve(token);
-      });
+      refreshPromise = refreshAccessToken(discovery, refresh, state).then(
+        (newSettings) => {
+          token = newSettings.token;
+          expiry = newSettings.expiry;
+          refresh = newSettings.refresh;
+          return token;
+        },
+      );
+      return refreshPromise;
     },
   };
 
