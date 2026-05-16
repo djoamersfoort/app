@@ -3,7 +3,7 @@
     "name": "djo",
     "slug": "djo",
     "scheme": "djo",
-    "version": "1.7.8",
+    "version": "1.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#202088"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "buildNumber": "1",
       "userInterfaceStyle": "automatic",
@@ -25,12 +23,8 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification"
-        ],
-        "LSApplicationQueriesSchemes": [
-          "djo"
-        ]
+        "UIBackgroundModes": ["remote-notification"],
+        "LSApplicationQueriesSchemes": ["djo"]
       }
     },
     "android": {

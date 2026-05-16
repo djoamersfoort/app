@@ -16,7 +16,6 @@ import CustomNavigationBar from "./src/components/navbar";
 import SlotScreen from "./src/screens/feed/slot";
 import { createStackNavigator } from "@react-navigation/stack";
 import AlbumScreen from "./src/screens/media/album";
-import SmoelScreen from "./src/screens/media/smoel";
 import { Item } from "./src/__generated__/media";
 import SlidesScreen from "./src/screens/media/slides";
 import { useColorScheme } from "react-native";
@@ -50,7 +49,6 @@ export type StackParamList = {
   Home: undefined;
   Slot: { slot: number; title: string };
   Album: { album: string; title: string };
-  Smoel: { smoel: string; title: string };
   Slides: { album?: string; items: Item[]; item: number };
   Web: { source: string; title: string };
   Search: undefined;
@@ -108,13 +106,6 @@ export default function App() {
                   <Stack.Screen
                     name={"Album"}
                     component={AlbumScreen}
-                    options={({ route }) => ({
-                      title: route.params.title,
-                    })}
-                  />
-                  <Stack.Screen
-                    name={"Smoel"}
-                    component={SmoelScreen}
                     options={({ route }) => ({
                       title: route.params.title,
                     })}
