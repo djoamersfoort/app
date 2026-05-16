@@ -1,8 +1,7 @@
-import {Appbar} from "react-native-paper";
+import { Appbar } from "react-native-paper";
 import Albums from "../../components/media/albums";
 
 export default function MediaScreen() {
-
   return (
     <>
       <Appbar.Header>
@@ -12,4 +11,3 @@ export default function MediaScreen() {
     </>
   );
 }
-
