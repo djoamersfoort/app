@@ -2,6 +2,7 @@
   "expo": {
     "name": "djo",
     "slug": "djo",
+    "owner": "de-jonge-onderzoekers-amersfoort",
     "scheme": "djo",
     "version": "1.8.0",
     "orientation": "portrait",
