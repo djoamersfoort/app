@@ -1,27 +1,20 @@
-import { AlbumList, SmoelAlbumList } from "../../__generated__/media";
-import { Image, TouchableOpacity, StyleSheet } from "react-native";
-import { Text } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { NavigationProp } from "@react-navigation/native";
-import { StackParamList } from "../../../App";
+import {AlbumList} from "../../__generated__/media";
+import {Image, StyleSheet, TouchableOpacity} from "react-native";
+import {Text} from "react-native-paper";
+import {NavigationProp, useNavigation} from "@react-navigation/native";
+import {StackParamList} from "../../../App";
 
 type NavigationProps = NavigationProp<StackParamList>;
 
 export default function Preview({
   album,
-  mode,
 }: {
-  album: AlbumList | SmoelAlbumList;
-  mode: "smoel" | "album";
+  album: AlbumList;
 }) {
   const navigation = useNavigation<NavigationProps>();
 
   function navigate() {
-    if (mode === "album") {
       navigation.navigate("Album", { album: album.id, title: album.name });
-    } else {
-      navigation.navigate("Smoel", { smoel: album.id, title: album.name });
-    }
   }
 
   return (

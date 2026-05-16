@@ -31,7 +31,7 @@ export default function Albums() {
       data={albums}
       numColumns={2}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <Preview mode={"album"} album={item} />}
+      renderItem={({ item }) => <Preview album={item} />}
     />
   );
 }
