@@ -5,6 +5,9 @@ on:
       - v*
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 env:
   EAS_BUILD_ARGS: --non-interactive --profile production --local
 
