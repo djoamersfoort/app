@@ -71,10 +71,7 @@ interface GuestState {
   login: () => void;
 }
 export type AuthState =
-  | AuthenticatedState
-  | UnAuthenticatedState
-  | LoadingState
-  | GuestState;
+  AuthenticatedState | UnAuthenticatedState | LoadingState | GuestState;
 
 const AuthContext = createContext<AuthState>({
   authenticated: Authed.LOADING,
