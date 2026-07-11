@@ -8,13 +8,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#202088"
-    },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "buildNumber": "1",
       "userInterfaceStyle": "automatic",
@@ -24,12 +20,15 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"],
-        "LSApplicationQueriesSchemes": ["djo"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "LSApplicationQueriesSchemes": [
+          "djo"
+        ]
       }
     },
     "android": {
-      "edgeToEdgeEnabled": true,
       "package": "nl.djoamersfoort.djo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -58,7 +57,19 @@
       ],
       "expo-asset",
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      "expo-sharing",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#202088"
+        }
+      ]
     ],
     "extra": {
       "eas": {

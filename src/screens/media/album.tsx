@@ -17,9 +17,10 @@ import {
   Portal,
   Text,
 } from "react-native-paper";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import AuthContext, { Authed } from "../../auth";
+import { File } from "expo-file-system";
 
 type Props = StackScreenProps<StackParamList, "Album">;
 type NavigationProps = NavigationProp<StackParamList>;
@@ -40,12 +41,7 @@ export default function AlbumScreen({ route }: Props) {
     setUploadVisible(true);
     const formData = new FormData();
     images.forEach((asset) => {
-      // @ts-ignore
-      formData.append("items", {
-        uri: asset.uri,
-        name: "file",
-        type: asset.mimeType,
-      });
+      formData.append("items", new File(asset.uri));
     });
 
     await fetch(

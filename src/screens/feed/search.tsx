@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";
-import { parse } from "fast-html-parser";
+import { parseDocument, DomUtils } from "htmlparser2";
 import * as WebBrowser from "expo-web-browser";
 import Area from "../../components/area";
 
@@ -67,11 +67,12 @@ async function getArticles(query: string) {
   ).then((res) => res.json());
 
   return articles.map((article) => {
-    const excerpt = parse(article._embedded.self[0].excerpt.rendered);
-
+    const excerpt = parseDocument(article._embedded.self[0].excerpt.rendered);
     const result: FeedItem = {
       title: article.title,
-      description: excerpt.querySelector("p")?.text || "",
+      description: DomUtils.textContent(
+        DomUtils.getElementsByTagName("p", excerpt)[0],
+      ),
       icon: "post",
       action: {
         type: ActionType.LINK,

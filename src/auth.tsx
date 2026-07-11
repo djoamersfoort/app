@@ -134,7 +134,7 @@ async function refreshAccessToken(
   try {
     logging.log("AUTH", "Refreshing tokens...");
     const response = await fetch(discovery?.tokenEndpoint!, {
-      method: "post",
+      method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -252,7 +252,7 @@ function AuthScreen({
 
       setAuthenticated({ authenticated: Authed.LOADING });
       const tokens: TokenResponse = await fetch(discovery?.tokenEndpoint!, {
-        method: "post",
+        method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
