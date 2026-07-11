@@ -9,6 +9,7 @@ import {
 import { format, subDays } from "date-fns";
 import { AANMELDEN } from "../../env";
 import { DatePickerModal } from "react-native-paper-dates";
+import logging from "../../logging";
 
 export default function Calendar({
   open,
@@ -33,6 +34,7 @@ export default function Calendar({
   const authState = useContext(AuthContext);
 
   const onChange: MultiChange = ({ datePressed, change }) => {
+    logging.log("CALENDAR", `Date ${datePressed} changed to ${change}`);
     const date = format(datePressed, "yyyy-MM-dd");
     if (change === "added") {
       if (removedDates.has(date)) removedDates.delete(date);
@@ -49,16 +51,18 @@ export default function Calendar({
     if (authState.authenticated !== Authed.AUTHENTICATED) return;
 
     const token = await authState.token;
-    await fetch(`${AANMELDEN}/api/v1/future`, {
-      method: "patch",
+    const result = await fetch(`${AANMELDEN}/api/v1/future`, {
+      method: "PATCH",
       headers: {
         authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         add: Array.from(addedDates.values()),
         remove: Array.from(removedDates.values()),
       }),
     });
+    logging.log("CALENDAR", `Result: ${result.status}, ${await result.text()}`);
     await getSlots(token);
 
     addedDates.clear();
