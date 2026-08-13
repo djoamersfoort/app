@@ -69,7 +69,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#202088"
         }
-      ]
+      ],
+      "expo-router"
     ],
     "extra": {
       "eas": {

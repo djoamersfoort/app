@@ -1,10 +1,10 @@
-import { Authed, useAuth } from "../auth";
+import { Authed, useAuth } from "../../auth";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Appbar, Button, Text } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
-import logging from "../logging";
+import logging from "../../logging";
 import * as Sharing from "expo-sharing";
-import Area from "../components/area";
+import Area from "../../components/area";
 
 export default function SettingsScreen() {
   const authState = useAuth();

@@ -2,13 +2,11 @@ import { ActionType, FeedItem } from "../../queries/feed";
 import { TouchableOpacity } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Avatar, Card, IconButton } from "react-native-paper";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { StackParamList } from "../../../App";
-
-type NavigationProps = NavigationProp<StackParamList>;
+import { useRouter } from "expo-router";
+import { encodeParam } from "../../routes";
 
 export default function Item({ item }: { item: FeedItem }) {
-  const navigation = useNavigation<NavigationProps>();
+  const router = useRouter();
 
   async function open() {
     switch (item.action.type) {
@@ -17,23 +15,24 @@ export default function Item({ item }: { item: FeedItem }) {
         break;
       }
       case ActionType.VIEW: {
-        navigation.navigate("Web", {
-          source: item.action.source,
-          title: item.title,
+        // Only the id: the announcement's HTML is read back from the feed cache.
+        router.push({
+          pathname: "/web",
+          params: { id: item.action.id, title: item.title },
         });
         break;
       }
       case ActionType.ITEM: {
-        navigation.navigate("Item", {
-          item: item.action.item,
-          title: item.title,
+        router.push({
+          pathname: "/item",
+          params: { item: encodeParam(item.action.item), title: item.title },
         });
         break;
       }
       case ActionType.EVENT: {
-        navigation.navigate("Event", {
-          event: item.action.event,
-          title: item.title,
+        router.push({
+          pathname: "/event",
+          params: { event: encodeParam(item.action.event), title: item.title },
         });
       }
     }

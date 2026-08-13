@@ -5,14 +5,11 @@ import Feed from "../../components/feed/feed";
 import { useState } from "react";
 import { useFeed } from "../../queries/feed";
 import { useRegistration } from "../../queries/register";
-import { StackParamList } from "../../../App";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import logging from "../../logging";
 
-type NavigationProps = NavigationProp<StackParamList, "Search">;
-
 export default function FeedScreen() {
-  const navigation = useNavigation<NavigationProps>();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   // Both hooks are also used by the children below; React Query dedupes them
@@ -37,7 +34,7 @@ export default function FeedScreen() {
         <Appbar.Content title={"Home"} />
         <Appbar.Action
           icon={"magnify"}
-          onPress={() => navigation.navigate("Search")}
+          onPress={() => router.push("/search")}
         />
       </Appbar.Header>
       <ScrollView

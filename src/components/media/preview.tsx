@@ -1,16 +1,16 @@
 import { AlbumList } from "../../__generated__/media";
 import { Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Text } from "react-native-paper";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { StackParamList } from "../../../App";
-
-type NavigationProps = NavigationProp<StackParamList>;
+import { useRouter } from "expo-router";
 
 export default function Preview({ album }: { album: AlbumList }) {
-  const navigation = useNavigation<NavigationProps>();
+  const router = useRouter();
 
   function navigate() {
-    navigation.navigate("Album", { album: album.id, title: album.name });
+    router.push({
+      pathname: "/album/[album]",
+      params: { album: album.id, title: album.name },
+    });
   }
 
   return (

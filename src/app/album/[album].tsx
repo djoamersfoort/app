@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect } from "react";
-import { StackScreenProps } from "@react-navigation/stack";
-import { StackParamList } from "../../../App";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Appbar,
@@ -16,18 +14,18 @@ import {
   Portal,
   Text,
 } from "react-native-paper";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { useAlbum, useUploadItems } from "../../queries/media";
 import { errorMessage } from "../../api/errors";
+import { param } from "../../routes";
 
-type Props = StackScreenProps<StackParamList, "Album">;
-type NavigationProps = NavigationProp<StackParamList>;
+export default function AlbumScreen() {
+  const params = useLocalSearchParams<{ album?: string; title?: string }>();
+  const albumId = param(params.album);
 
-export default function AlbumScreen({ route }: Props) {
-  const navigation = useNavigation<NavigationProps>();
-  const { data: album, isPending, error } = useAlbum(route.params.album);
-  const upload = useUploadItems(route.params.album);
+  const router = useRouter();
+  const { data: album, isPending, error } = useAlbum(albumId);
+  const upload = useUploadItems(albumId);
 
   const [_cameraStatus, requestPermissions, getPermissions] =
     ImagePicker.useCameraPermissions();
@@ -76,37 +74,51 @@ export default function AlbumScreen({ route }: Props) {
     await submit(result.assets);
   }
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <>
-          <Appbar.Action icon={"folder-image"} onPress={selectImages} />
-          <Appbar.Action icon={"camera"} onPress={captureImages} />
-        </>
-      ),
-    });
-  }, [navigation]);
-
   function openImage(image: number) {
     if (!album) return;
 
-    navigation.navigate("Slides", {
-      album: album.id,
-      items: album.items,
-      item: image,
+    // Only the album id and the index travel in the route; the items stay in
+    // the query cache instead of being serialised into navigation state.
+    router.push({
+      pathname: "/slides",
+      params: { album: album.id, index: image },
     });
   }
 
-  if (isPending) return <ActivityIndicator animating={true} />;
+  // Declared as route options rather than pushed imperatively through
+  // navigation.setOptions, which is the Expo Router way of doing this.
+  const header = (
+    <Stack.Screen
+      options={{
+        title: param(params.title),
+        headerRight: () => (
+          <>
+            <Appbar.Action icon={"folder-image"} onPress={selectImages} />
+            <Appbar.Action icon={"camera"} onPress={captureImages} />
+          </>
+        ),
+      }}
+    />
+  );
+
+  if (isPending)
+    return (
+      <>
+        {header}
+        <ActivityIndicator animating={true} />
+      </>
+    );
   if (error || !album)
     return (
       <View style={styles.message}>
+        {header}
         <Text>{errorMessage(error)}</Text>
       </View>
     );
 
   return (
     <>
+      {header}
       <FlatList
         numColumns={3}
         initialNumToRender={3}

@@ -21,6 +21,8 @@ interface LinkAction {
 }
 interface ViewAction {
   type: ActionType.VIEW;
+  /** Identifies the announcement so the web route can look it up by id. */
+  id: string;
   source: string;
 }
 interface ItemAction {
@@ -101,6 +103,7 @@ async function fetchAnnouncements(
         date: new Date().getTime(),
         action: {
           type: ActionType.VIEW,
+          id: "demo",
           source,
         },
       },
@@ -114,13 +117,14 @@ async function fetchAnnouncements(
 
   if (!Array.isArray(announcements)) return [];
 
-  return announcements.map((announcement) => ({
+  return announcements.map((announcement, index) => ({
     icon: "bullhorn",
     title: announcement.title,
     description: announcement.description,
     date: new Date(announcement.date).getTime(),
     action: {
       type: ActionType.VIEW,
+      id: announcement.id ?? `announcement-${index}`,
       source: announcement.content,
     },
   }));
@@ -157,5 +161,26 @@ export function useFeed() {
     refetch: async () => {
       await Promise.all([rss.refetch(), announcements.refetch()]);
     },
+  };
+}
+
+/**
+ * Resolves the HTML behind a `VIEW` feed item. The web route receives only the
+ * id, so the (potentially large) document stays in the query cache instead of
+ * being serialised into navigation state.
+ */
+export function useAnnouncement(id: string) {
+  const { items, isPending, error } = useFeed();
+
+  const item = items.find(
+    (entry) => entry.action.type === ActionType.VIEW && entry.action.id === id,
+  );
+
+  return {
+    title: item?.title,
+    source:
+      item && item.action.type === ActionType.VIEW ? item.action.source : null,
+    isPending,
+    error,
   };
 }

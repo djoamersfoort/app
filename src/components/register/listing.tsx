@@ -10,8 +10,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { StackParamList } from "../../../App";
+import { useRouter } from "expo-router";
 import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
 import { useState } from "react";
@@ -20,18 +19,19 @@ import Calendar from "./calendar";
 import { Authed, useAuth } from "../../auth";
 import { errorMessage } from "../../api/errors";
 
-type SlotNavigationProps = NavigationProp<StackParamList>;
-
 registerTranslation("nl", nl);
 
 function SlotListing({ slot, index }: { slot: Slot; index: number }) {
-  const navigation = useNavigation<SlotNavigationProps>();
+  const router = useRouter();
   const theme = useTheme();
 
   return (
     <TouchableOpacity
       onPress={() =>
-        navigation.navigate("Slot", { slot: index, title: slot.description })
+        router.push({
+          pathname: "/slot",
+          params: { slot: index, title: slot.description },
+        })
       }
     >
       <Card mode={"contained"}>

@@ -1,24 +1,26 @@
-import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActivityIndicator, Button, Chip, Text } from "react-native-paper";
-import { useRegistration, useToggleRegistration } from "../../queries/register";
-import { StackParamList } from "../../../App";
-import { Authed, useAuth } from "../../auth";
-import PresenceCard from "../../components/register/precenseCard";
-import Area from "../../components/area";
-import { errorMessage } from "../../api/errors";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useRegistration, useToggleRegistration } from "../queries/register";
+import { Authed, useAuth } from "../auth";
+import PresenceCard from "../components/register/precenseCard";
+import Area from "../components/area";
+import { errorMessage } from "../api/errors";
+import { numberParam, param } from "../routes";
 
-type Props = StackScreenProps<StackParamList, "Slot">;
+export default function SlotScreen() {
+  const params = useLocalSearchParams<{ slot?: string; title?: string }>();
+  const title = param(params.title);
+  const index = numberParam(params.slot, -1);
 
-export default function SlotScreen({ route }: Props) {
   // Hooks run unconditionally: the previous version returned early when the
   // slots had not loaded yet, which changed the hook order between renders.
   const { data, isPending } = useRegistration();
   const toggleRegistration = useToggleRegistration();
   const authState = useAuth();
 
-  const slot = data?.slots[route.params.slot];
+  const slot = index >= 0 ? data?.slots[index] : undefined;
   const members = data?.members ?? [];
 
   async function register() {
@@ -31,8 +33,24 @@ export default function SlotScreen({ route }: Props) {
     }
   }
 
-  if (isPending) return <ActivityIndicator animating={true} />;
-  if (!slot) return <Text>Something went wrong!</Text>;
+  // The header title comes from the route params, so it is declared in every
+  // branch rather than only in the loaded one.
+  const header = <Stack.Screen options={{ title }} />;
+
+  if (isPending)
+    return (
+      <>
+        {header}
+        <ActivityIndicator animating={true} />
+      </>
+    );
+  if (!slot)
+    return (
+      <>
+        {header}
+        <Text>Something went wrong!</Text>
+      </>
+    );
 
   const isTutor =
     authState.authenticated === Authed.AUTHENTICATED &&
@@ -40,6 +58,7 @@ export default function SlotScreen({ route }: Props) {
 
   return (
     <View style={styles.slot}>
+      {header}
       <SafeAreaView style={styles.content} edges={["right", "bottom", "left"]}>
         <ScrollView>
           <View style={styles.info}>

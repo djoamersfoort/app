@@ -1,88 +1,111 @@
-import { StackScreenProps } from "@react-navigation/stack";
-import { StackParamList } from "../../../App";
 import { Alert, Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
-import { useEffect, useState } from "react";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { useState } from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { Appbar, Button, Dialog, Portal, Text } from "react-native-paper";
 import {
+  ActivityIndicator,
+  Appbar,
+  Button,
+  Dialog,
+  Portal,
+  Text,
+} from "react-native-paper";
+import {
+  useAlbum,
   useDeleteItem,
   useMediaUser,
   useSetPreview,
-} from "../../queries/media";
-import { errorMessage } from "../../api/errors";
+} from "../queries/media";
+import { errorMessage } from "../api/errors";
+import { numberParam, param } from "../routes";
 
-type Props = StackScreenProps<StackParamList, "Slides">;
-type NavigationProps = NavigationProp<StackParamList>;
+export default function SlidesScreen() {
+  const params = useLocalSearchParams<{ album?: string; index?: string }>();
+  const album = param(params.album);
 
-export default function SlidesScreen({ route }: Props) {
-  const { album, items, item } = route.params;
-  const [page, setPage] = useState(item);
+  const [page, setPage] = useState(() => numberParam(params.index, 0));
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const navigation = useNavigation<NavigationProps>();
+  const router = useRouter();
 
+  // The item list is read from the album query rather than passed through the
+  // route, so a long album does not end up serialised into navigation state.
+  const { data: albumData, isPending } = useAlbum(album);
   const { data: user } = useMediaUser();
-  const deleteItem = useDeleteItem(album ?? "");
-  const setPreviewItem = useSetPreview(album ?? "");
+  const deleteItem = useDeleteItem(album);
+  const setPreviewItem = useSetPreview(album);
 
+  const items = albumData?.items ?? [];
+  const current = items[page];
   const admin = user?.admin ?? false;
 
-  function askDelete() {
-    setDeleteVisible(true);
-  }
-
   async function confirmDelete() {
-    if (!album) return;
+    if (!current) return;
 
     try {
-      await deleteItem.mutateAsync(items[page].id);
+      await deleteItem.mutateAsync(current.id);
       setDeleteVisible(false);
       // The album query is invalidated by the mutation, so the grid we return
       // to reloads without this screen having to patch its own params.
-      navigation.goBack();
+      router.back();
     } catch (error) {
       setDeleteVisible(false);
       Alert.alert("Verwijderen mislukt", errorMessage(error));
     }
   }
 
-  function cancelDelete() {
-    setDeleteVisible(false);
-  }
-
   async function setPreview() {
-    if (!album) return;
+    if (!current) return;
 
     try {
-      await setPreviewItem.mutateAsync(items[page].id);
+      await setPreviewItem.mutateAsync(current.id);
       setPreviewVisible(true);
     } catch (error) {
       Alert.alert("Instellen mislukt", errorMessage(error));
     }
   }
 
-  useEffect(() => {
-    const title = new Date(items[page].date).toLocaleDateString("nl-NL", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    navigation.setOptions({
-      title,
-      headerRight: () =>
-        album && (
+  const header = (
+    <Stack.Screen
+      options={{
+        title: current
+          ? new Date(current.date).toLocaleDateString("nl-NL", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "",
+        headerRight: () => (
           <>
             {admin && <Appbar.Action icon={"star"} onPress={setPreview} />}
-            {(admin || items[page].user === user?.id) && (
-              <Appbar.Action icon={"trash-can"} onPress={askDelete} />
+            {(admin || current?.user === user?.id) && (
+              <Appbar.Action
+                icon={"trash-can"}
+                onPress={() => setDeleteVisible(true)}
+              />
             )}
           </>
         ),
-    });
-  }, [page, user]);
+      }}
+    />
+  );
+
+  if (isPending)
+    return (
+      <View style={styles.center}>
+        {header}
+        <ActivityIndicator animating={true} />
+      </View>
+    );
+
+  if (items.length === 0)
+    return (
+      <View style={styles.center}>
+        {header}
+        <Text>Er is niets om te tonen</Text>
+      </View>
+    );
 
   function inRange(x: number, y: number, range: number) {
     return x >= y - range && x <= y + range;
@@ -90,6 +113,7 @@ export default function SlidesScreen({ route }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
+      {header}
       <PagerView
         style={{ flex: 1 }}
         initialPage={page}
@@ -114,7 +138,10 @@ export default function SlidesScreen({ route }: Props) {
       </PagerView>
 
       <Portal>
-        <Dialog visible={deleteVisible} onDismiss={cancelDelete}>
+        <Dialog
+          visible={deleteVisible}
+          onDismiss={() => setDeleteVisible(false)}
+        >
           <Dialog.Title>
             Weet je zeker dat je dit wilt verwijderen?
           </Dialog.Title>
@@ -124,7 +151,10 @@ export default function SlidesScreen({ route }: Props) {
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={cancelDelete} disabled={deleteItem.isPending}>
+            <Button
+              onPress={() => setDeleteVisible(false)}
+              disabled={deleteItem.isPending}
+            >
               Annuleer
             </Button>
             <Button onPress={confirmDelete} loading={deleteItem.isPending}>
@@ -148,9 +178,10 @@ export default function SlidesScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
   },
   image: {
     width: "100%",

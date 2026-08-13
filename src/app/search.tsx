@@ -9,13 +9,13 @@ import {
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import Item from "../../components/feed/item";
+import { useRouter } from "expo-router";
+import Item from "../components/feed/item";
 import * as WebBrowser from "expo-web-browser";
-import Area from "../../components/area";
-import { useArticleSearch, useItemSearch } from "../../queries/search";
-import { FeedItem } from "../../queries/feed";
-import { errorMessage } from "../../api/errors";
+import Area from "../components/area";
+import { useArticleSearch, useItemSearch } from "../queries/search";
+import { FeedItem } from "../queries/feed";
+import { errorMessage } from "../api/errors";
 
 /** Renders one result section, including its loading and failure states. */
 function Results({
@@ -53,7 +53,7 @@ export default function SearchScreen() {
   // Only the submitted term drives the queries, so typing does not fire a
   // request per keystroke.
   const [query, setQuery] = useState("");
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const items = useItemSearch(query);
   const articles = useArticleSearch(query);
@@ -78,7 +78,7 @@ export default function SearchScreen() {
             onChangeText={setSearch}
             onSubmitEditing={() => setQuery(search)}
             icon={"chevron-left"}
-            onIconPress={navigation.goBack}
+            onIconPress={router.back}
             value={search}
           />
         </View>
