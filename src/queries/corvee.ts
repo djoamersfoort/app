@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CORVEE } from "../env";
 import { requestJson, requestVoid, segment } from "../api/client";
-import { keys, useScope } from "../api/keys";
+import { keys, useScope } from "../api/query";
+import { showError } from "../api/errors";
 import { Authed, useAuth, useTokenProvider } from "../auth";
 
 export interface CorveeProfile {
@@ -66,6 +67,7 @@ export function useCorveeAction() {
         auth: token,
       });
     },
+    onError: (error) => showError("Actie mislukt", error),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: keys.corveeStatus(scope) }),
   });
@@ -82,6 +84,7 @@ export function useCreateCorvee() {
 
       await requestVoid(`${CORVEE}/api/v1/renew`, { auth: token });
     },
+    onError: (error) => showError("Aanmaken mislukt", error),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: keys.corveeStatus(scope) }),
   });

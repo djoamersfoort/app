@@ -1,12 +1,11 @@
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActivityIndicator, Button, Chip, Text } from "react-native-paper";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useRegistration, useToggleRegistration } from "../queries/register";
 import { Authed, useAuth } from "../auth";
-import PresenceCard from "../components/register/precenseCard";
+import PresenceCard from "../components/register/presence-card";
 import Area from "../components/area";
-import { errorMessage } from "../api/errors";
 import { numberParam, param } from "../routes";
 
 export default function SlotScreen() {
@@ -22,16 +21,6 @@ export default function SlotScreen() {
 
   const slot = index >= 0 ? data?.slots[index] : undefined;
   const members = data?.members ?? [];
-
-  async function register() {
-    if (!slot) return;
-
-    try {
-      await toggleRegistration.mutateAsync(slot);
-    } catch (error) {
-      Alert.alert(errorMessage(error));
-    }
-  }
 
   // The header title comes from the route params, so it is declared in every
   // branch rather than only in the loaded one.
@@ -122,7 +111,7 @@ export default function SlotScreen() {
             loading={toggleRegistration.isPending}
             contentStyle={{ height: 50 }}
             mode={slot.is_registered ? "outlined" : "contained"}
-            onPress={register}
+            onPress={() => slot && toggleRegistration.mutate(slot)}
           >
             {slot.is_registered ? "Afmelden" : "Aanmelden"}
           </Button>

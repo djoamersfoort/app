@@ -1,7 +1,7 @@
 import { Appbar } from "react-native-paper";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import Listing from "../../components/register/listing";
-import Feed from "../../components/feed/feed";
+import Listing from "../../components/register/slot-list";
+import Feed from "../../components/feed/news";
 import { useState } from "react";
 import { useFeed } from "../../queries/feed";
 import { useRegistration } from "../../queries/register";

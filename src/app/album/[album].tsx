@@ -30,14 +30,6 @@ export default function AlbumScreen() {
   const [_cameraStatus, requestPermissions, getPermissions] =
     ImagePicker.useCameraPermissions();
 
-  async function submit(images: ImagePicker.ImagePickerAsset[]) {
-    try {
-      await upload.mutateAsync(images);
-    } catch (uploadError) {
-      Alert.alert("Uploaden mislukt", errorMessage(uploadError));
-    }
-  }
-
   async function selectImages() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images", "videos", "livePhotos"],
@@ -45,7 +37,7 @@ export default function AlbumScreen() {
     });
     if (result.canceled) return;
 
-    await submit(result.assets);
+    upload.mutate(result.assets);
   }
 
   async function captureImages() {
@@ -71,7 +63,7 @@ export default function AlbumScreen() {
     });
     if (result.canceled) return;
 
-    await submit(result.assets);
+    upload.mutate(result.assets);
   }
 
   function openImage(image: number) {

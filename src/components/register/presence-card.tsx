@@ -1,9 +1,8 @@
 import { useTheme } from "react-native-paper";
 import { PaperSelect } from "react-native-paper-select";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Presence from "./presence";
 import { Member, Slot, useRegisterMember } from "../../queries/register";
-import { errorMessage } from "../../api/errors";
 
 export default function PresenceCard({
   slot,
@@ -30,15 +29,9 @@ export default function PresenceCard({
         selectedArrayList={[]}
         multiEnable={false}
         value={""}
-        onSelection={async (selection) => {
+        onSelection={(selection) => {
           const selected = selection.selectedList[0];
-          if (!selected) return;
-
-          try {
-            await registerMember.mutateAsync({ slot, member: selected._id });
-          } catch (error) {
-            Alert.alert("Aanmelden mislukt", errorMessage(error));
-          }
+          if (selected) registerMember.mutate({ slot, member: selected._id });
         }}
         theme={theme}
         textInputStyle={{

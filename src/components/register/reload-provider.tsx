@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { AANMELDEN } from "../../env";
 import { Authed, useAuth } from "../../auth";
-import { useScope } from "../../api/keys";
+import { useScope } from "../../api/query";
 import { invalidateRegistration } from "../../queries/register";
 import logging from "../../logging";
 

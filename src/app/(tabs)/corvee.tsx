@@ -3,8 +3,8 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Appbar, Icon, Text } from "react-native-paper";
 import { useCorveeStatus } from "../../queries/corvee";
 import { useRegistration } from "../../queries/register";
-import Create from "../../components/corvee/Create";
-import Selected from "../../components/corvee/Selected";
+import CreateList from "../../components/corvee/create-list";
+import ProfileCard from "../../components/corvee/profile-card";
 import { errorMessage } from "../../api/errors";
 
 export default function CorveeScreen() {
@@ -37,8 +37,10 @@ export default function CorveeScreen() {
         <View style={styles.content}>
           {state && !("error" in state) && (
             <>
-              {state.current.length === 0 && <Create state={state} />}
-              {state.current.length > 0 && <Selected state={state} />}
+              {state.current.length === 0 && <CreateList state={state} />}
+              {state.current.map((profile) => (
+                <ProfileCard key={profile.id} selected={profile} />
+              ))}
             </>
           )}
           {state && "error" in state && (

@@ -25,7 +25,7 @@ export default function TabsLayout() {
     <NativeTabs>
       <Trigger name={"index"}>
         <Icon
-          sf={{ default: "house", selected: "house.fill" }}
+          sf={"house.fill"}
           src={<VectorIcon family={MaterialCommunityIcons} name={"home"} />}
         />
         <Label>Home</Label>
@@ -54,7 +54,7 @@ export default function TabsLayout() {
 
       <Trigger name={"media"} hidden={!authenticated}>
         <Icon
-          sf={"play.rectangle"}
+          sf={"photo.fill.on.rectangle.fill"}
           src={<VectorIcon family={MaterialCommunityIcons} name={"video"} />}
         />
         <Label>Media</Label>

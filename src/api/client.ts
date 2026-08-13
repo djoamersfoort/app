@@ -1,12 +1,5 @@
 import logging from "../logging";
-import {
-  HttpError,
-  InsecureRequestError,
-  NetworkError,
-  ParseError,
-  TimeoutError,
-  redactUrl,
-} from "./errors";
+import { HttpError, NetworkError, TimeoutError, redactUrl } from "./errors";
 
 export const DEFAULT_TIMEOUT_MS = 15_000;
 /** Uploads move real bytes over mobile connections, so they get their own budget. */
@@ -44,13 +37,13 @@ const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1]|10\.0\.2\.2)(:\d+)?$/i;
 function assertSafeUrl(url: string) {
   const origin = originOf(url);
   if (!origin)
-    throw new InsecureRequestError(url, "not an absolute http(s) URL");
+    throw new Error(`Blocked ${redactUrl(url)}: not an absolute http(s) URL`);
 
   const [scheme, host] = origin.split("://");
   if (scheme === "https") return;
   if (scheme === "http" && __DEV__ && LOCAL_HOSTS.test(host)) return;
 
-  throw new InsecureRequestError(url, `scheme ${scheme} is not allowed`);
+  throw new Error(`Blocked ${redactUrl(url)}: scheme ${scheme} is not allowed`);
 }
 
 async function readBody(response: Response): Promise<string> {
@@ -118,7 +111,7 @@ async function send(
     if (timedOut) throw new TimeoutError(url, timeout);
     // A caller-initiated abort is not a failure; let React Query see it as-is.
     throwIfAborted(signal);
-    throw new NetworkError(url, error);
+    throw new NetworkError(url);
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", abort);
@@ -138,9 +131,8 @@ async function send(
     const from = originOf(url);
     const to = originOf(response.url);
     if (to && from && to !== from)
-      throw new InsecureRequestError(
-        url,
-        `redirected to a different origin (${to})`,
+      throw new Error(
+        `Blocked ${redactUrl(url)}: redirected to a different origin (${to})`,
       );
   }
 
@@ -169,7 +161,7 @@ export async function request(
 
   if (!response.ok) {
     const body = await readBody(response);
-    throw new HttpError(response.status, url, body, messageFromBody(body));
+    throw new HttpError(response.status, url, messageFromBody(body));
   }
 
   return response;
@@ -188,8 +180,8 @@ export async function requestJson<T>(
   const text = await response.text();
   try {
     return JSON.parse(text) as T;
-  } catch (error) {
-    throw new ParseError(url, error);
+  } catch {
+    throw new Error(`Unexpected response from ${redactUrl(url)}`);
   }
 }
 

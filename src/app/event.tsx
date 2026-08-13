@@ -20,7 +20,6 @@ import MapView, { Marker } from "react-native-maps";
 import { useRegistration } from "../queries/register";
 import * as WebBrowser from "expo-web-browser";
 import Area from "../components/area";
-import { errorMessage } from "../api/errors";
 import { decodeParam, param } from "../routes";
 
 function friday() {
@@ -122,15 +121,11 @@ function EventDetails({ event, title }: { event: VEvent; title: string }) {
   }
 
   async function register() {
-    let slots = data?.slots ?? [];
-
-    if (slots.length === 0) {
-      try {
-        slots = (await refetch()).data?.slots ?? [];
-      } catch (error) {
-        return Alert.alert("Aanmelden mislukt", errorMessage(error));
-      }
-    }
+    // `refetch` resolves with the error rather than throwing, so a failure just
+    // leaves the list empty and falls through to the "not found" alert.
+    const slots = data?.slots.length
+      ? data.slots
+      : ((await refetch()).data?.slots ?? []);
 
     const slot = slots.findIndex((slot) =>
       isSameDay(

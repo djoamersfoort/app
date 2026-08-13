@@ -1,20 +1,13 @@
 import { Presence as PresenceType, useMarkSeen } from "../../queries/register";
 import { Icon, Switch, Text } from "react-native-paper";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
-import { errorMessage } from "../../api/errors";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 export default function Presence({ presence }: { presence: PresenceType }) {
   const markSeen = useMarkSeen();
 
-  async function toggle() {
-    try {
-      // The switch flips immediately through the optimistic cache update and
-      // rolls back on failure, so no local copy of `seen` is needed here.
-      await markSeen.mutateAsync({ presence, seen: !presence.seen });
-    } catch (error) {
-      Alert.alert("Aanpassen mislukt", errorMessage(error));
-    }
-  }
+  // The switch flips immediately through the optimistic cache update and rolls
+  // back on failure, so no local copy of `seen` is needed here.
+  const toggle = () => markSeen.mutate({ presence, seen: !presence.seen });
 
   return (
     <TouchableOpacity style={styles.presence} onPress={toggle}>

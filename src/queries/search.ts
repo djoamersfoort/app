@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DomUtils, parseDocument } from "htmlparser2";
 import { requestJson, segment } from "../api/client";
-import { keys } from "../api/keys";
+import { keys } from "../api/query";
 import { ActionType, FeedItem } from "./feed";
 
 export interface InventoryItem {

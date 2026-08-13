@@ -1,4 +1,4 @@
-import { Alert, Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import { useState } from "react";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -17,7 +17,6 @@ import {
   useMediaUser,
   useSetPreview,
 } from "../queries/media";
-import { errorMessage } from "../api/errors";
 import { numberParam, param } from "../routes";
 
 export default function SlidesScreen() {
@@ -40,30 +39,23 @@ export default function SlidesScreen() {
   const current = items[page];
   const admin = user?.admin ?? false;
 
-  async function confirmDelete() {
+  function confirmDelete() {
     if (!current) return;
 
-    try {
-      await deleteItem.mutateAsync(current.id);
-      setDeleteVisible(false);
+    deleteItem.mutate(current.id, {
       // The album query is invalidated by the mutation, so the grid we return
       // to reloads without this screen having to patch its own params.
-      router.back();
-    } catch (error) {
-      setDeleteVisible(false);
-      Alert.alert("Verwijderen mislukt", errorMessage(error));
-    }
+      onSuccess: () => router.back(),
+      onSettled: () => setDeleteVisible(false),
+    });
   }
 
-  async function setPreview() {
+  function setPreview() {
     if (!current) return;
 
-    try {
-      await setPreviewItem.mutateAsync(current.id);
-      setPreviewVisible(true);
-    } catch (error) {
-      Alert.alert("Instellen mislukt", errorMessage(error));
-    }
+    setPreviewItem.mutate(current.id, {
+      onSuccess: () => setPreviewVisible(true),
+    });
   }
 
   const header = (

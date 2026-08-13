@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { parse, VEvent } from "unfucked-ical";
 import { requestText } from "../api/client";
-import { keys } from "../api/keys";
+import { keys } from "../api/query";
 
 const EVENTS_URL = "https://www.djoamersfoort.nl/feed/eo-events/";
 

@@ -15,7 +15,7 @@ import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
 import { useState } from "react";
 import nl from "react-native-paper-dates/src/translations/nl";
-import Calendar from "./calendar";
+import Calendar from "./date-picker";
 import { Authed, useAuth } from "../../auth";
 import { errorMessage } from "../../api/errors";
 

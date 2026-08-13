@@ -15,8 +15,8 @@ import {
   segment,
   UPLOAD_TIMEOUT_MS,
 } from "../api/client";
-import { HttpError } from "../api/errors";
-import { keys, useScope } from "../api/keys";
+import { HttpError, showError } from "../api/errors";
+import { keys, useScope } from "../api/query";
 import { Authed, useAuth, useTokenProvider } from "../auth";
 
 const MEDIA_BASE = "https://media.djoamersfoort.nl/api";
@@ -47,12 +47,7 @@ async function call<T>(
         detail && typeof detail === "object" && "detail" in detail
           ? String((detail as { detail: unknown }).detail)
           : undefined;
-      throw new HttpError(
-        response.status,
-        response.url || MEDIA_BASE,
-        "",
-        message,
-      );
+      throw new HttpError(response.status, response.url || MEDIA_BASE, message);
     }
 
     throw new Error("Unexpected media API failure");
@@ -133,6 +128,7 @@ export function useUploadItems(album: string) {
         timeout: UPLOAD_TIMEOUT_MS,
       });
     },
+    onError: (error) => showError("Uploaden mislukt", error),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: keys.album(scope, album) });
       queryClient.invalidateQueries({ queryKey: keys.albums(scope) });
@@ -150,6 +146,7 @@ export function useDeleteItem(album: string) {
       if (!api) return;
       return call(() => api.items.deleteItems(album, [item]));
     },
+    onError: (error) => showError("Verwijderen mislukt", error),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: keys.album(scope, album) });
       queryClient.invalidateQueries({ queryKey: keys.albums(scope) });
@@ -167,6 +164,7 @@ export function useSetPreview(album: string) {
       if (!api) return;
       return call(() => api.albums.setPreview(album, { item_id: item }));
     },
+    onError: (error) => showError("Instellen mislukt", error),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: keys.albums(scope) });
     },

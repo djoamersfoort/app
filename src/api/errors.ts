@@ -1,8 +1,4 @@
-/**
- * Typed errors for every network failure mode. React Query decides whether to
- * retry based on these, so the distinction between "the server said no" and
- * "we never reached the server" matters.
- */
+import { Alert } from "react-native";
 
 /** Strips query strings so tokens or codes never reach the log file. */
 export function redactUrl(url: string): string {
@@ -10,11 +6,12 @@ export function redactUrl(url: string): string {
   return end === -1 ? url : `${url.slice(0, end)}?…`;
 }
 
+/**
+ * Only failures a retry could plausibly fix get their own type; everything else
+ * throws a plain Error, which {@link isRetryableError} treats as permanent.
+ */
 export class NetworkError extends Error {
-  constructor(
-    readonly url: string,
-    readonly cause?: unknown,
-  ) {
+  constructor(url: string) {
     super(`Could not reach ${redactUrl(url)}`);
     this.name = "NetworkError";
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -22,10 +19,7 @@ export class NetworkError extends Error {
 }
 
 export class TimeoutError extends Error {
-  constructor(
-    readonly url: string,
-    readonly timeout: number,
-  ) {
+  constructor(url: string, timeout: number) {
     super(`${redactUrl(url)} did not respond within ${timeout}ms`);
     this.name = "TimeoutError";
     Object.setPrototypeOf(this, TimeoutError.prototype);
@@ -35,11 +29,10 @@ export class TimeoutError extends Error {
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    readonly url: string,
-    readonly body: string,
+    url: string,
     message?: string,
   ) {
-    super(message || `${redactUrl(url)} gaf status ${status}`);
+    super(message || `${redactUrl(url)} returned status ${status}`);
     this.name = "HttpError";
     Object.setPrototypeOf(this, HttpError.prototype);
   }
@@ -55,38 +48,8 @@ export class HttpError extends Error {
   }
 }
 
-/** The response arrived but was not the shape we asked for (HTML error page, truncated JSON, …). */
-export class ParseError extends Error {
-  constructor(
-    readonly url: string,
-    readonly cause?: unknown,
-  ) {
-    super(`Unexpected response from ${redactUrl(url)}`);
-    this.name = "ParseError";
-    Object.setPrototypeOf(this, ParseError.prototype);
-  }
-}
-
-/** A bearer token was about to be sent somewhere it does not belong. */
-export class InsecureRequestError extends Error {
-  constructor(
-    readonly url: string,
-    reason: string,
-  ) {
-    super(`Blocked request to ${redactUrl(url)}: ${reason}`);
-    this.name = "InsecureRequestError";
-    Object.setPrototypeOf(this, InsecureRequestError.prototype);
-  }
-}
-
-/**
- * Whether React Query should retry. Auth failures, bad requests and blocked
- * requests are permanent; transport hiccups and 5xx are not.
- */
 export function isRetryableError(error: unknown): boolean {
   if (error instanceof HttpError) return error.isRetryable;
-  if (error instanceof InsecureRequestError) return false;
-  if (error instanceof ParseError) return false;
   return error instanceof NetworkError || error instanceof TimeoutError;
 }
 
@@ -100,4 +63,13 @@ export function errorMessage(error: unknown): string {
     return "Geen verbinding. Controleer je internetverbinding.";
   if (error instanceof Error) return error.message;
   return "Er is iets misgegaan";
+}
+
+/**
+ * Announces a failure to the user. Mutations declare this in their `onError`,
+ * so call sites can fire and forget instead of wrapping every `mutateAsync` in
+ * the same try/catch.
+ */
+export function showError(title: string, error: unknown) {
+  Alert.alert(title, errorMessage(error));
 }

@@ -1,9 +1,8 @@
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
-import PresenceCard from "../register/precenseCard";
+import PresenceCard from "../register/presence-card";
 import { useRegistration } from "../../queries/register";
 import { CorveeState, useCreateCorvee } from "../../queries/corvee";
-import { errorMessage } from "../../api/errors";
 
 export default function Create({ state }: { state: CorveeState }) {
   const { data } = useRegistration();
@@ -13,14 +12,6 @@ export default function Create({ state }: { state: CorveeState }) {
   const slot = data?.slots.find(
     (slot) => slot.pod === state.pod && slot.name === state.day,
   );
-
-  async function create() {
-    try {
-      await createCorvee.mutateAsync();
-    } catch (error) {
-      Alert.alert("Aanmaken mislukt", errorMessage(error));
-    }
-  }
 
   if (!slot) return null;
 
@@ -39,7 +30,7 @@ export default function Create({ state }: { state: CorveeState }) {
       </View>
       <Button
         mode={"contained"}
-        onPress={create}
+        onPress={() => createCorvee.mutate()}
         loading={createCorvee.isPending}
         disabled={createCorvee.isPending}
       >

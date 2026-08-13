@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { Alert } from "react-native";
 import {
   MultiChange,
   MultiConfirm,
@@ -7,7 +6,6 @@ import {
 import { format, subDays } from "date-fns";
 import { DatePickerModal } from "react-native-paper-dates";
 import { useRegistration, useUpdateFutureDates } from "../../queries/register";
-import { errorMessage } from "../../api/errors";
 import logging from "../../logging";
 
 export default function Calendar({
@@ -53,14 +51,7 @@ export default function Calendar({
 
     if (add.length === 0 && remove.length === 0) return;
 
-    try {
-      await updateDates.mutateAsync({ add, remove });
-    } catch (error) {
-      // Previously the response status was only written to the log, so a
-      // rejected change looked like it had been saved.
-      logging.log("CALENDAR", `Saving dates failed: ${error}`);
-      Alert.alert("Opslaan mislukt", errorMessage(error));
-    }
+    updateDates.mutate({ add, remove });
   };
 
   return (

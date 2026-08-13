@@ -7,7 +7,8 @@ import {
   segment,
   TokenProvider,
 } from "../api/client";
-import { keys, Scope, useScope } from "../api/keys";
+import { keys, useScope } from "../api/query";
+import { showError } from "../api/errors";
 import { Authed, useAuth, useTokenProvider } from "../auth";
 import logging from "../logging";
 
@@ -180,9 +181,10 @@ export function useToggleRegistration() {
 
       return { previous };
     },
-    onError: (_error, _slot, context) => {
+    onError: (error, _slot, context) => {
       if (context?.previous)
         queryClient.setQueryData(keys.slots(scope), context.previous);
+      showError("Aanmelden mislukt", error);
     },
     onSettled: () => {
       // Demo mode has no server to reconcile with; keep the optimistic state.
@@ -230,9 +232,10 @@ export function useMarkSeen() {
 
       return { previous };
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previous)
         queryClient.setQueryData(keys.slots(scope), context.previous);
+      showError("Aanpassen mislukt", error);
     },
     onSettled: () => {
       if (token) invalidateRegistration(queryClient, scope);
@@ -254,6 +257,7 @@ export function useRegisterMember() {
         token,
       );
     },
+    onError: (error) => showError("Aanmelden mislukt", error),
     onSettled: () => invalidateRegistration(queryClient, scope),
   });
 }
@@ -283,6 +287,7 @@ export function useUpdateFutureDates() {
       );
       if (message) throw new Error(message);
     },
+    onError: (error) => showError("Opslaan mislukt", error),
     onSettled: () => invalidateRegistration(queryClient, scope),
   });
 }
@@ -290,7 +295,7 @@ export function useUpdateFutureDates() {
 /** Shared by the mutations above and the live-reload socket. */
 export function invalidateRegistration(
   queryClient: ReturnType<typeof useQueryClient>,
-  scope: Scope,
+  scope: string,
 ) {
   return queryClient.invalidateQueries({ queryKey: keys.slots(scope) });
 }

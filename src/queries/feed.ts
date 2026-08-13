@@ -5,7 +5,7 @@ import { Asset } from "expo-asset";
 import { SerializedComponent } from "unfucked-ical";
 import { LEDEN_ADMIN } from "../env";
 import { requestJson, requestText, TokenProvider } from "../api/client";
-import { keys, useScope } from "../api/keys";
+import { keys, useScope } from "../api/query";
 import { useTokenProvider } from "../auth";
 import type { InventoryItem } from "./search";
 

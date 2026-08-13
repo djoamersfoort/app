@@ -18,9 +18,9 @@ import * as Notifications from "expo-notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../auth";
 import SessionProvider from "../components/session";
-import ReloadProvider from "../components/register/reloadProvider";
+import ReloadProvider from "../components/register/reload-provider";
 import CustomNavigationBar from "../components/navbar";
-import { queryClient, subscribeToAppState } from "../api/queryClient";
+import { queryClient, subscribeToAppState } from "../api/query";
 import "../logging";
 
 Notifications.setNotificationHandler({
