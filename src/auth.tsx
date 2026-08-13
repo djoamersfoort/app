@@ -1,4 +1,11 @@
-import { createContext, useState, JSX, useEffect } from "react";
+import {
+  createContext,
+  useState,
+  JSX,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import * as AuthSession from "expo-auth-session";
@@ -13,15 +20,34 @@ import {
 } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
 import { DiscoveryDocument } from "expo-auth-session";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
 import { CLIENT_ID, LEDEN_ADMIN, SCOPES } from "./env";
 import logging from "./logging";
+import { requestJson, TokenProvider } from "./api/client";
+import { HttpError } from "./api/errors";
 
 const redirectUri = AuthSession.makeRedirectUri({ path: "redirect" });
 logging.log("AUTH", redirectUri);
 WebBrowser.maybeCompleteAuthSession();
+
+/** Refresh this long before the token actually expires, so in-flight requests never race the clock. */
+const EXPIRY_SKEW_MS = 60_000;
+const REFRESH_TIMEOUT_MS = 15_000;
+
+/**
+ * Tokens stay on this device and are only readable while it is unlocked, so a
+ * backup or a synced keychain never carries a usable session off the phone.
+ */
+const SECURE_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
+
+const STORAGE = {
+  token: "id_token",
+  refresh: "refresh_token",
+  expiry: "expiration_date",
+  scopes: "scopes",
+  guest: "guest",
+} as const;
 
 export enum Authed {
   LOADING,
@@ -35,8 +61,8 @@ interface StripCard {
   count: number;
 }
 
-interface User {
-  aud: string;
+export interface User {
+  aud: string | string[];
   iat: number;
   at_hash: string;
   sub: string;
@@ -60,7 +86,8 @@ interface LoadingState {
 interface AuthenticatedState {
   authenticated: Authed.AUTHENTICATED;
   user: User;
-  token: Promise<string>;
+  /** Stable across renders; pass straight to the API client. */
+  getToken: TokenProvider;
   logout: () => Promise<void>;
 }
 interface UnAuthenticatedState {
@@ -68,7 +95,7 @@ interface UnAuthenticatedState {
 }
 interface GuestState {
   authenticated: Authed.GUEST;
-  login: () => void;
+  login: () => Promise<void>;
 }
 export type AuthState =
   | AuthenticatedState
@@ -81,142 +108,175 @@ const AuthContext = createContext<AuthState>({
 });
 
 interface TokenResponse {
-  id_token: string;
+  id_token?: string;
   refresh_token?: string;
-  expires_in: number;
+  expires_in?: number;
 }
 
-async function registerForPushNotifications(user: AuthenticatedState) {
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.DEFAULT,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
+/** The refresh token is no longer accepted; only a fresh login can recover. */
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Session expired");
+    this.name = "SessionExpiredError";
+    Object.setPrototypeOf(this, SessionExpiredError.prototype);
   }
-
-  if (!Device.isDevice) return;
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-  if (finalStatus !== "granted") {
-    return;
-  }
-
-  const config = Constants.expoConfig;
-  if (!config) return;
-
-  const { data: pushToken } = await Notifications.getExpoPushTokenAsync({
-    projectId: config.extra?.eas.projectId,
-  });
-  await fetch(`${LEDEN_ADMIN}/notifications/token`, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${await user.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      token: pushToken,
-    }),
-  });
 }
 
-async function refreshAccessToken(
-  discovery: DiscoveryDocument,
-  refresh: string,
-  state: AuthenticatedState,
-) {
+/**
+ * Validates the claims we depend on before trusting a token.
+ *
+ * The signature itself is not checked here: the token is only ever accepted
+ * straight from the provider's token endpoint over TLS (never from a redirect
+ * parameter), so the transport is what authenticates it. These checks catch a
+ * misconfigured or swapped provider, and a token minted for another client.
+ */
+function parseIdToken(token: string | undefined, issuer?: string): User {
+  if (!token || typeof token !== "string")
+    throw new Error("No id_token in token response");
+
+  let claims: User;
   try {
-    logging.log("AUTH", "Refreshing tokens...");
-    const response = await fetch(discovery?.tokenEndpoint!, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        client_id: CLIENT_ID,
-        refresh_token: refresh,
-      }).toString(),
-    });
-
-    if (response.status >= 400 && response.status <= 403) {
-      await state.logout();
-      throw new Error("Session expired");
-    }
-
-    if (!response.ok) {
-      throw new Error(`Token refresh failed: ${response.status}`);
-    }
-
-    const tokens: TokenResponse = await response.json();
-    const token = tokens.id_token;
-    const expiry = Date.now() + tokens.expires_in * 1000;
-
-    await SecureStore.setItemAsync("id_token", token);
-    await SecureStore.setItemAsync("expiration_date", expiry.toString());
-    if (tokens.refresh_token) {
-      refresh = tokens.refresh_token;
-      await SecureStore.setItemAsync("refresh_token", refresh);
-    }
-
-    logging.log("AUTH", "Finished refreshing tokens");
-    return { refresh, token, expiry };
-  } finally {
-    refreshPromise = null;
+    claims = jwtDecode<User>(token);
+  } catch (error) {
+    throw new Error("id_token could not be decoded");
   }
+
+  const audience = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+  if (!audience.includes(CLIENT_ID))
+    throw new Error("id_token was issued for a different client");
+
+  if (issuer && claims.iss !== issuer)
+    throw new Error("id_token came from a different issuer");
+
+  if (typeof claims.exp !== "number")
+    throw new Error("id_token has no expiry claim");
+
+  return claims;
 }
 
-// Promise to prevent multiple concurrent refreshes
-let refreshPromise: Promise<string> | null = null;
+/** The provider's own identifier, from the fetched discovery document. */
+function issuerOf(discovery: DiscoveryDocument): string | undefined {
+  return discovery.discoveryDocument?.issuer;
+}
 
-function createAuthState(
-  setState: (state: AuthState) => void,
-  discovery: DiscoveryDocument,
-  token: string,
-  refresh: string,
-  expiry: number,
-): AuthState {
-  const state: AuthenticatedState = {
-    authenticated: Authed.AUTHENTICATED,
-    user: jwtDecode(token),
-    async logout() {
-      logging.log("AUTH", "Logging out.");
-      await SecureStore.deleteItemAsync("id_token");
-      await SecureStore.deleteItemAsync("refresh_token");
-      await SecureStore.deleteItemAsync("expiration_date");
-      setState({ authenticated: Authed.UNAUTHENTICATED });
-    },
-    get token() {
-      // When already refreshing, return the promise
-      if (refreshPromise) {
-        return refreshPromise;
-      }
+function expiryOf(response: TokenResponse, claims: User) {
+  return typeof response.expires_in === "number" && response.expires_in > 0
+    ? Date.now() + response.expires_in * 1000
+    : claims.exp * 1000;
+}
 
-      // When token still valid, return it right away
-      if (expiry > Date.now()) {
-        return Promise.resolve(token);
-      }
+async function storeSession(token: string, refresh: string, expiry: number) {
+  await SecureStore.setItemAsync(STORAGE.token, token, SECURE_OPTIONS);
+  await SecureStore.setItemAsync(STORAGE.refresh, refresh, SECURE_OPTIONS);
+  await SecureStore.setItemAsync(
+    STORAGE.expiry,
+    expiry.toString(),
+    SECURE_OPTIONS,
+  );
+}
 
-      refreshPromise = refreshAccessToken(discovery, refresh, state).then(
-        (newSettings) => {
-          token = newSettings.token;
-          expiry = newSettings.expiry;
-          refresh = newSettings.refresh;
-          return token;
-        },
-      );
-      return refreshPromise;
-    },
+async function clearSession() {
+  await Promise.all([
+    SecureStore.deleteItemAsync(STORAGE.token, SECURE_OPTIONS),
+    SecureStore.deleteItemAsync(STORAGE.refresh, SECURE_OPTIONS),
+    SecureStore.deleteItemAsync(STORAGE.expiry, SECURE_OPTIONS),
+    SecureStore.deleteItemAsync(STORAGE.scopes, SECURE_OPTIONS),
+  ]);
+}
+
+/**
+ * Owns exactly one session's tokens. Refreshes are single-flight: concurrent
+ * callers share one in-flight request, and the slot is only released once that
+ * request has fully settled, so a burst of parallel screens can never mint
+ * several refresh tokens and invalidate each other.
+ */
+class TokenManager {
+  private refreshing: Promise<string> | null = null;
+  private invalidated = false;
+
+  constructor(
+    private readonly tokenEndpoint: string,
+    private readonly issuer: string | undefined,
+    private token: string,
+    private refresh: string,
+    private expiry: number,
+    private readonly onRefreshed: (claims: User) => void,
+    private readonly onInvalid: () => void,
+  ) {}
+
+  get valid() {
+    return this.expiry - EXPIRY_SKEW_MS > Date.now();
+  }
+
+  /** Stable identity, so React Query dependencies do not churn. */
+  readonly getToken: TokenProvider = (force = false) => {
+    if (this.invalidated) return Promise.reject(new SessionExpiredError());
+    if (!force && this.valid) return Promise.resolve(this.token);
+    if (this.refreshing) return this.refreshing;
+
+    this.refreshing = this.performRefresh().finally(() => {
+      this.refreshing = null;
+    });
+    return this.refreshing;
   };
 
-  registerForPushNotifications(state).then();
-  return state;
+  private async performRefresh(): Promise<string> {
+    logging.log("AUTH", "Refreshing tokens...");
+
+    let payload: TokenResponse;
+    try {
+      payload = await requestJson<TokenResponse>(this.tokenEndpoint, {
+        method: "POST",
+        timeout: REFRESH_TIMEOUT_MS,
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          client_id: CLIENT_ID,
+          refresh_token: this.refresh,
+        }).toString(),
+      });
+    } catch (error) {
+      // A 4xx means the provider rejected the refresh token itself, so the
+      // session is unrecoverable. Anything else (offline, 5xx, timeout) is
+      // transient and must not log the user out.
+      if (error instanceof HttpError && error.status < 500) {
+        logging.log("AUTH", `Session rejected (${error.status}), logging out`);
+        await this.invalidate();
+        throw new SessionExpiredError();
+      }
+      logging.log("AUTH", `Refresh failed, keeping session: ${error}`);
+      throw error;
+    }
+
+    const claims = parseIdToken(payload.id_token, this.issuer);
+    this.token = payload.id_token!;
+    this.expiry = expiryOf(payload, claims);
+    // Providers may rotate the refresh token; keep the newest one.
+    if (payload.refresh_token) this.refresh = payload.refresh_token;
+
+    await storeSession(this.token, this.refresh, this.expiry);
+    this.onRefreshed(claims);
+
+    logging.log("AUTH", "Finished refreshing tokens");
+    return this.token;
+  }
+
+  async invalidate() {
+    if (this.invalidated) return;
+    this.invalidated = true;
+    await clearSession();
+    this.onInvalid();
+  }
+}
+
+function guestState(setAuthenticated: (state: AuthState) => void): GuestState {
+  return {
+    authenticated: Authed.GUEST,
+    login: async () => {
+      await SecureStore.deleteItemAsync(STORAGE.guest, SECURE_OPTIONS);
+      setAuthenticated({ authenticated: Authed.UNAUTHENTICATED });
+    },
+  };
 }
 
 function AuthScreen({
@@ -227,6 +287,7 @@ function AuthScreen({
   discovery: DiscoveryDocument;
 }) {
   const theme = useTheme();
+  const [busy, setBusy] = useState(false);
 
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -234,6 +295,7 @@ function AuthScreen({
       clientId: CLIENT_ID,
       responseType: "code",
       scopes: SCOPES,
+      usePKCE: true,
     },
     discovery,
   );
@@ -242,57 +304,88 @@ function AuthScreen({
     async function authenticateUser() {
       if (!result) return;
       if (result.type === "error") {
-        Alert.alert(
+        return Alert.alert(
           "Authentication error",
           result.params.error_description || "something went wrong",
         );
-        return;
       }
       if (result.type !== "success") return;
 
+      if (!discovery.tokenEndpoint) {
+        return Alert.alert(
+          "Authentication error",
+          "The login server is incompletely configured",
+        );
+      }
+      // Without the verifier the code is interceptable; refuse rather than
+      // silently downgrade to a plain authorization code exchange.
+      if (!request?.codeVerifier) {
+        return Alert.alert(
+          "Authentication error",
+          "The secure login session expired, please try again",
+        );
+      }
+
+      setBusy(true);
       setAuthenticated({ authenticated: Authed.LOADING });
-      const tokens: TokenResponse = await fetch(discovery?.tokenEndpoint!, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          client_id: CLIENT_ID,
-          code: result.params.code,
-          redirect_uri: redirectUri,
-          code_verifier: request?.codeVerifier,
-        } as Record<string, string>).toString(),
-      }).then((res) => res.json());
+      try {
+        const payload = await requestJson<TokenResponse>(
+          discovery.tokenEndpoint,
+          {
+            method: "POST",
+            timeout: REFRESH_TIMEOUT_MS,
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              grant_type: "authorization_code",
+              client_id: CLIENT_ID,
+              code: result.params.code,
+              redirect_uri: redirectUri,
+              code_verifier: request.codeVerifier,
+            }).toString(),
+          },
+        );
 
-      const token = tokens.id_token;
-      const expiry = Date.now() + tokens.expires_in * 1000;
-      const refresh = tokens.refresh_token;
+        const claims = parseIdToken(payload.id_token, issuerOf(discovery));
+        if (!payload.refresh_token)
+          throw new Error("No refresh_token in token response");
 
-      await SecureStore.setItemAsync("id_token", token);
-      await SecureStore.setItemAsync("expiration_date", expiry.toString());
-      await SecureStore.setItemAsync("refresh_token", refresh!);
-      await SecureStore.setItemAsync("scopes", JSON.stringify(SCOPES));
+        const expiry = expiryOf(payload, claims);
+        await storeSession(payload.id_token!, payload.refresh_token, expiry);
+        await SecureStore.setItemAsync(
+          STORAGE.scopes,
+          JSON.stringify(SCOPES),
+          SECURE_OPTIONS,
+        );
 
-      setAuthenticated(
-        createAuthState(setAuthenticated, discovery, token, refresh!, expiry),
-      );
+        setAuthenticated(
+          createAuthState(setAuthenticated, discovery, {
+            token: payload.id_token!,
+            refresh: payload.refresh_token,
+            expiry,
+            user: claims,
+          }),
+        );
+      } catch (error) {
+        // Never strand the app on the loading spinner: fall back to the login
+        // screen so the user can try again.
+        logging.log("AUTH", `Login failed: ${error}`);
+        await clearSession();
+        setAuthenticated({ authenticated: Authed.UNAUTHENTICATED });
+        Alert.alert(
+          "Authentication error",
+          error instanceof Error ? error.message : "something went wrong",
+        );
+      } finally {
+        setBusy(false);
+      }
     }
 
     authenticateUser().then();
   }, [result]);
 
   async function guest() {
-    await SecureStore.setItemAsync("guest", "true");
-    setAuthenticated({
-      authenticated: Authed.GUEST,
-      login: async () => {
-        await SecureStore.deleteItemAsync("guest");
-        setAuthenticated({
-          authenticated: Authed.UNAUTHENTICATED,
-        });
-      },
-    });
+    await SecureStore.setItemAsync(STORAGE.guest, "true", SECURE_OPTIONS);
+    setAuthenticated(guestState(setAuthenticated));
   }
 
   return (
@@ -307,6 +400,8 @@ function AuthScreen({
         labelStyle={{ fontSize: 17 }}
         contentStyle={{ height: 50 }}
         mode={"contained"}
+        disabled={!request || busy}
+        loading={busy}
         onPress={() => promptAsync()}
       >
         Log in
@@ -318,6 +413,42 @@ function AuthScreen({
   );
 }
 
+interface Session {
+  token: string;
+  refresh: string;
+  expiry: number;
+  user: User;
+}
+
+function createAuthState(
+  setState: (state: AuthState) => void,
+  discovery: DiscoveryDocument,
+  session: Session,
+): AuthenticatedState {
+  const manager = new TokenManager(
+    discovery.tokenEndpoint!,
+    issuerOf(discovery),
+    session.token,
+    session.refresh,
+    session.expiry,
+    // A refresh returns updated claims (strippenkaart, rollen); keep the UI in sync.
+    (user) => setState({ ...state, user }),
+    () => setState({ authenticated: Authed.UNAUTHENTICATED }),
+  );
+
+  const state: AuthenticatedState = {
+    authenticated: Authed.AUTHENTICATED,
+    user: session.user,
+    getToken: manager.getToken,
+    logout: async () => {
+      logging.log("AUTH", "Logging out.");
+      await manager.invalidate();
+    },
+  };
+
+  return state;
+}
+
 export function AuthProvider({ children }: { children: JSX.Element }) {
   const theme = useTheme();
   const discovery = AuthSession.useAutoDiscovery(`${LEDEN_ADMIN}/o`);
@@ -325,50 +456,67 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
     authenticated: Authed.LOADING,
   });
   const [guestWarning, setGuestWarning] = useState(false);
+  const restored = useRef(false);
 
   useEffect(() => {
-    if (!discovery) return;
-    async function getAuthenticated() {
-      if (await SecureStore.getItemAsync("guest")) {
+    if (!discovery || restored.current) return;
+    restored.current = true;
+
+    async function restore() {
+      if (await SecureStore.getItemAsync(STORAGE.guest, SECURE_OPTIONS)) {
         setGuestWarning(true);
-        return setAuthenticated({
-          authenticated: Authed.GUEST,
-          login: async () => {
-            await SecureStore.deleteItemAsync("guest");
-            setAuthenticated({
-              authenticated: Authed.UNAUTHENTICATED,
-            });
-          },
-        });
+        return setAuthenticated(guestState(setAuthenticated));
       }
 
-      const token = await SecureStore.getItemAsync("id_token");
-      const refresh = await SecureStore.getItemAsync("refresh_token");
-      const expiry = await SecureStore.getItemAsync("expiration_date");
+      const [token, refresh, expiry, storedScopes] = await Promise.all([
+        SecureStore.getItemAsync(STORAGE.token, SECURE_OPTIONS),
+        SecureStore.getItemAsync(STORAGE.refresh, SECURE_OPTIONS),
+        SecureStore.getItemAsync(STORAGE.expiry, SECURE_OPTIONS),
+        SecureStore.getItemAsync(STORAGE.scopes, SECURE_OPTIONS),
+      ]);
 
-      const scopes = JSON.parse(
-        (await SecureStore.getItemAsync("scopes")) || "[]",
-      ) as string[];
-      const missing = SCOPES.find((scope) => !scopes.includes(scope));
+      // A build that needs new scopes must re-consent rather than run with a
+      // token that silently lacks permissions.
+      let scopes: string[] = [];
+      try {
+        scopes = JSON.parse(storedScopes || "[]");
+      } catch {
+        scopes = [];
+      }
+      const missing = SCOPES.some((scope) => !scopes.includes(scope));
 
       if (!token || !refresh || !expiry || missing) {
-        return setAuthenticated({
-          authenticated: Authed.UNAUTHENTICATED,
-        });
+        if (missing && token) await clearSession();
+        return setAuthenticated({ authenticated: Authed.UNAUTHENTICATED });
       }
 
-      setAuthenticated(
-        createAuthState(
-          setAuthenticated,
-          discovery!,
-          token,
-          refresh,
-          parseInt(expiry),
-        ),
-      );
+      let user: User;
+      try {
+        user = parseIdToken(token, issuerOf(discovery!));
+      } catch (error) {
+        logging.log("AUTH", `Stored token rejected: ${error}`);
+        await clearSession();
+        return setAuthenticated({ authenticated: Authed.UNAUTHENTICATED });
+      }
+
+      const state = createAuthState(setAuthenticated, discovery!, {
+        token,
+        refresh,
+        expiry: parseInt(expiry, 10) || 0,
+        user,
+      });
+      setAuthenticated(state);
+
+      // Surface a dead session now instead of when the user taps something.
+      // A network failure here is not fatal; requests will refresh on demand.
+      try {
+        await state.getToken();
+      } catch (error) {
+        logging.log("AUTH", `Could not refresh token on startup: ${error}`);
+      }
     }
 
-    getAuthenticated().then();
+    restore().then();
   }, [discovery]);
 
   return (
@@ -379,17 +527,16 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
       {discovery &&
         authenticated.authenticated > Authed.UNAUTHENTICATED &&
         children}
-      {!discovery ||
-        (authenticated.authenticated === Authed.LOADING && (
-          <View
-            style={{
-              ...styles.center,
-              backgroundColor: theme.colors.primaryContainer,
-            }}
-          >
-            <ActivityIndicator animating={true} />
-          </View>
-        ))}
+      {(!discovery || authenticated.authenticated === Authed.LOADING) && (
+        <View
+          style={{
+            ...styles.center,
+            backgroundColor: theme.colors.primaryContainer,
+          }}
+        >
+          <ActivityIndicator animating={true} />
+        </View>
+      )}
 
       <Snackbar
         visible={guestWarning}
@@ -409,6 +556,16 @@ export function AuthProvider({ children }: { children: JSX.Element }) {
       </Snackbar>
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+/** The token provider for authenticated requests, or null when there is no session. */
+export function useTokenProvider(): TokenProvider | null {
+  const auth = useAuth();
+  return auth.authenticated === Authed.AUTHENTICATED ? auth.getToken : null;
 }
 
 const styles = StyleSheet.create({

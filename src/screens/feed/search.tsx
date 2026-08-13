@@ -10,99 +10,53 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { ActionType, FeedItem } from "../../stores/feed";
 import Item from "../../components/feed/item";
-import { parseDocument, DomUtils } from "htmlparser2";
 import * as WebBrowser from "expo-web-browser";
 import Area from "../../components/area";
+import { useArticleSearch, useItemSearch } from "../../queries/search";
+import { FeedItem } from "../../queries/feed";
+import { errorMessage } from "../../api/errors";
 
-export interface Item {
-  id: number;
-  name: string;
-  description: string;
-  location: string;
-  location_description: string;
-  location_id: 7;
-  url: string;
-  properties: string[];
-}
+/** Renders one result section, including its loading and failure states. */
+function Results({
+  results,
+  isPending,
+  error,
+  empty,
+}: {
+  results: FeedItem[] | undefined;
+  isPending: boolean;
+  error: unknown;
+  empty: React.ReactElement;
+}) {
+  if (isPending) return <ActivityIndicator animating={true} />;
+  if (error)
+    return (
+      <View style={styles.center}>
+        <Text>{errorMessage(error)}</Text>
+      </View>
+    );
+  if (!results || results.length === 0) return empty;
 
-interface Article {
-  id: string;
-  title: string;
-  url: string;
-  _embedded: {
-    self: [
-      {
-        excerpt: {
-          rendered: string;
-        };
-      },
-    ];
-  };
-}
-
-async function getItems(query: string) {
-  const { items }: { items: Item[] } = await fetch(
-    `https://inventory.djoamersfoort.nl/api/v1/items/search/${encodeURI(query)}`,
-  ).then((res) => res.json());
-
-  return items.map(
-    (item) =>
-      ({
-        title: item.name,
-        description: item.location_description,
-        icon: "package-variant-closed",
-        action: {
-          type: ActionType.ITEM,
-          item,
-        },
-      }) as FeedItem,
+  return (
+    <>
+      {results.map((result, index) => (
+        <Item key={index} item={result} />
+      ))}
+    </>
   );
-}
-
-async function getArticles(query: string) {
-  const articles: Article[] = await fetch(
-    `https://djoamersfoort.nl/wp-json/wp/v2/search?_embed&search=${encodeURI(query)}`,
-  ).then((res) => res.json());
-
-  return articles.map((article) => {
-    const excerpt = parseDocument(article._embedded.self[0].excerpt.rendered);
-    const result: FeedItem = {
-      title: article.title,
-      description: DomUtils.textContent(
-        DomUtils.getElementsByTagName("p", excerpt)[0],
-      ),
-      icon: "post",
-      action: {
-        type: ActionType.LINK,
-        href: article.url,
-      },
-    };
-
-    return result;
-  });
 }
 
 export default function SearchScreen() {
   const theme = useTheme();
   const [search, setSearch] = useState("");
+  // Only the submitted term drives the queries, so typing does not fire a
+  // request per keystroke.
+  const [query, setQuery] = useState("");
   const navigation = useNavigation();
 
-  const [itemResults, setItemsResults] = useState<FeedItem[] | null>(null);
-  const [articleResults, setArticleResults] = useState<FeedItem[] | null>(null);
-  const [searched, setSearched] = useState(false);
-
-  async function updateResults() {
-    setSearched(!!search);
-    if (!search) return;
-
-    setItemsResults(null);
-    setArticleResults(null);
-
-    getItems(search).then(setItemsResults);
-    getArticles(search).then(setArticleResults);
-  }
+  const items = useItemSearch(query);
+  const articles = useArticleSearch(query);
 
   async function orderList() {
     await WebBrowser.openBrowserAsync(
@@ -122,7 +76,7 @@ export default function SearchScreen() {
           <Searchbar
             placeholder="Search"
             onChangeText={setSearch}
-            onSubmitEditing={updateResults}
+            onSubmitEditing={() => setQuery(search)}
             icon={"chevron-left"}
             onIconPress={navigation.goBack}
             value={search}
@@ -135,40 +89,34 @@ export default function SearchScreen() {
               ...styles.results,
             }}
           >
-            {searched && (
+            {!!query && (
               <>
                 <Area title={"Inventaris"} icon={"package-variant-closed"}>
-                  {itemResults ? (
-                    itemResults.length > 0 ? (
-                      itemResults.map((result, index) => (
-                        <Item key={index} item={result} />
-                      ))
-                    ) : (
+                  <Results
+                    results={items.data}
+                    isPending={items.isPending}
+                    error={items.error}
+                    empty={
                       <View style={styles.center}>
                         <Text>Geen producten gevonden</Text>
                         <Button onPress={orderList} mode={"text"}>
                           Mis je iets? Bekijk de bestellijst
                         </Button>
                       </View>
-                    )
-                  ) : (
-                    <ActivityIndicator animating={true} />
-                  )}
+                    }
+                  />
                 </Area>
                 <Area title={"Artikelen"} icon={"post"}>
-                  {articleResults ? (
-                    articleResults.length > 0 ? (
-                      articleResults.map((result, index) => (
-                        <Item key={index} item={result} />
-                      ))
-                    ) : (
+                  <Results
+                    results={articles.data}
+                    isPending={articles.isPending}
+                    error={articles.error}
+                    empty={
                       <View style={styles.center}>
                         <Text>Geen artikelen gevonden</Text>
                       </View>
-                    )
-                  ) : (
-                    <ActivityIndicator animating={true} />
-                  )}
+                    }
+                  />
                 </Area>
               </>
             )}
@@ -176,7 +124,7 @@ export default function SearchScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {!searched && (
+      {!query && (
         <View style={styles.start}>
           <Icon size={75} source={"magnify"} />
           <Text>Zoek naar artikelen en items in de inventaris</Text>

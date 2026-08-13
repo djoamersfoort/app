@@ -1,5 +1,4 @@
-import { useAtomValue } from "jotai";
-import { Slot, slotsAtom } from "../../stores/register";
+import { Slot, useRegistration } from "../../queries/register";
 import {
   ActivityIndicator,
   Avatar,
@@ -7,7 +6,7 @@ import {
   Chip,
   Icon,
   IconButton,
-  MD3Colors,
+  Text,
   useTheme,
 } from "react-native-paper";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -15,10 +14,11 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { StackParamList } from "../../../App";
 import Area from "../area";
 import { registerTranslation } from "react-native-paper-dates";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import nl from "react-native-paper-dates/src/translations/nl";
 import Calendar from "./calendar";
-import AuthContext, { Authed } from "../../auth";
+import { Authed, useAuth } from "../../auth";
+import { errorMessage } from "../../api/errors";
 
 type SlotNavigationProps = NavigationProp<StackParamList>;
 
@@ -64,9 +64,9 @@ function SlotListing({ slot, index }: { slot: Slot; index: number }) {
 }
 
 export default function Listing() {
-  const slots = useAtomValue(slotsAtom);
+  const { data, isPending, error } = useRegistration();
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const authState = useContext(AuthContext);
+  const authState = useAuth();
 
   return (
     <>
@@ -85,12 +85,18 @@ export default function Listing() {
             )) || <></>
         }
       >
-        {slots ? (
-          slots.map((slot, index) => (
-            <SlotListing key={index} slot={slot} index={index} />
-          ))
-        ) : (
+        {isPending ? (
           <ActivityIndicator animating={true} />
+        ) : data && data.slots.length > 0 ? (
+          <>
+            {data.slots.map((slot, index) => (
+              <SlotListing key={index} slot={slot} index={index} />
+            ))}
+          </>
+        ) : (
+          <Text>
+            {error ? errorMessage(error) : "Er zijn geen dagen beschikbaar"}
+          </Text>
         )}
       </Area>
       <Calendar open={calendarOpen} setOpen={setCalendarOpen} />

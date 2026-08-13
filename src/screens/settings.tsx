@@ -1,5 +1,4 @@
-import { useContext } from "react";
-import AuthContext, { Authed } from "../auth";
+import { Authed, useAuth } from "../auth";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Appbar, Button, Text } from "react-native-paper";
 import * as WebBrowser from "expo-web-browser";
@@ -8,7 +7,7 @@ import * as Sharing from "expo-sharing";
 import Area from "../components/area";
 
 export default function SettingsScreen() {
-  const authState = useContext(AuthContext);
+  const authState = useAuth();
 
   async function orderList() {
     await WebBrowser.openBrowserAsync(

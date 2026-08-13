@@ -1,11 +1,9 @@
 import { useTheme } from "react-native-paper";
 import { PaperSelect } from "react-native-paper-select";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import Presence from "./presence";
-import { Member, Slot } from "../../stores/register";
-import AuthContext, { Authed } from "../../auth";
-import { AANMELDEN } from "../../env";
-import { useContext } from "react";
+import { Member, Slot, useRegisterMember } from "../../queries/register";
+import { errorMessage } from "../../api/errors";
 
 export default function PresenceCard({
   slot,
@@ -15,40 +13,32 @@ export default function PresenceCard({
   members: Member[];
 }) {
   const theme = useTheme();
-  const authState = useContext(AuthContext);
+  const registerMember = useRegisterMember();
 
-  async function registerManual(user: string) {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
+  // `sort` mutates in place; copy first so the cached member list is untouched.
+  const options = [...members]
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
+    .map(({ id, name }) => ({ _id: id.toString(), value: name }));
 
-    const token = await authState.token;
-    await fetch(
-      `${AANMELDEN}/api/v1/register_manual/${slot.name}/${slot.pod}/${user}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
-    );
-  }
-
-  if (!slot.presence) return;
+  if (!slot.presence) return null;
 
   return (
     <View>
       <PaperSelect
         label={"Lid handmatig aanmelden"}
-        arrayList={members
-          .sort((a, b) => (a.name < b.name ? -1 : 1))
-          .map(({ id, name }) => ({
-            _id: id.toString(),
-            value: name,
-          }))}
+        arrayList={options}
         selectedArrayList={[]}
         multiEnable={false}
         value={""}
         onSelection={async (selection) => {
-          if (!selection.selectedList[0]) return;
-          await registerManual(selection.selectedList[0]._id);
+          const selected = selection.selectedList[0];
+          if (!selected) return;
+
+          try {
+            await registerMember.mutateAsync({ slot, member: selected._id });
+          } catch (error) {
+            Alert.alert("Aanmelden mislukt", errorMessage(error));
+          }
         }}
         theme={theme}
         textInputStyle={{
@@ -62,7 +52,7 @@ export default function PresenceCard({
       />
       <View style={styles.presence}>
         {slot.presence.map((presence) => (
-          <Presence key={presence.id} presence={presence} slot={slot} />
+          <Presence key={presence.id} presence={presence} />
         ))}
       </View>
     </View>

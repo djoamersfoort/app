@@ -1,30 +1,22 @@
-import { useApi } from "../../stores/media";
-import { AlbumList } from "../../__generated__/media";
-import { useEffect, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Text } from "react-native-paper";
 import Preview from "./preview";
-import { ActivityIndicator } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useAlbums } from "../../queries/media";
+import { errorMessage } from "../../api/errors";
 
 export default function Albums() {
-  const [albums, setAlbums] = useState<AlbumList[] | null>(null);
-  const api = useApi();
-  const navigation = useNavigation();
+  // Refetches automatically when the app regains focus, so the manual
+  // navigation "focus" listener is no longer needed.
+  const { data: albums, isPending, error } = useAlbums();
 
-  useEffect(() => {
-    async function getAlbums() {
-      if (!api) return;
+  if (isPending) return <ActivityIndicator animating={true} />;
+  if (error)
+    return (
+      <View style={styles.message}>
+        <Text>{errorMessage(error)}</Text>
+      </View>
+    );
 
-      const { data: albums } = await api.albums.getAlbums();
-      setAlbums(albums.sort((a, b) => a.order - b.order));
-    }
-
-    navigation.addListener("focus", getAlbums);
-
-    getAlbums().then();
-  }, [api]);
-
-  if (!albums) return <ActivityIndicator animating={true} />;
   return (
     <FlatList
       style={{ margin: 5 }}
@@ -32,6 +24,18 @@ export default function Albums() {
       numColumns={2}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <Preview album={item} />}
+      ListEmptyComponent={
+        <View style={styles.message}>
+          <Text>Er zijn nog geen albums</Text>
+        </View>
+      }
     />
   );
 }
+
+const styles = StyleSheet.create({
+  message: {
+    padding: 20,
+    alignItems: "center",
+  },
+});

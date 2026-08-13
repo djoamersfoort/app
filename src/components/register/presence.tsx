@@ -1,48 +1,24 @@
-import {
-  Presence as PresenceType,
-  Slot,
-  slotsAtom,
-} from "../../stores/register";
+import { Presence as PresenceType, useMarkSeen } from "../../queries/register";
 import { Icon, Switch, Text } from "react-native-paper";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { useContext, useState } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import { AANMELDEN } from "../../env";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { errorMessage } from "../../api/errors";
 
-export default function Presence({
-  presence,
-  slot,
-}: {
-  presence: PresenceType;
-  slot: Slot;
-}) {
-  const [slots, setSlots] = useAtom(slotsAtom);
-  const [seen, setSeen] = useState(presence.seen);
-  const authState = useContext(AuthContext);
+export default function Presence({ presence }: { presence: PresenceType }) {
+  const markSeen = useMarkSeen();
 
-  async function markSeen() {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-    if (!slots) return;
-
-    presence.seen = !presence.seen;
-    setSeen(presence.seen);
-    setSlots(slots);
-
-    const token = await authState.token;
-    await fetch(
-      `${AANMELDEN}/api/v1/seen/${presence.id}/${presence.seen ? "true" : "false"}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
-    );
+  async function toggle() {
+    try {
+      // The switch flips immediately through the optimistic cache update and
+      // rolls back on failure, so no local copy of `seen` is needed here.
+      await markSeen.mutateAsync({ presence, seen: !presence.seen });
+    } catch (error) {
+      Alert.alert("Aanpassen mislukt", errorMessage(error));
+    }
   }
 
   return (
-    <TouchableOpacity style={styles.presence} onPress={markSeen}>
-      <Switch value={seen} onChange={markSeen} />
+    <TouchableOpacity style={styles.presence} onPress={toggle}>
+      <Switch value={presence.seen} onValueChange={toggle} />
       <Text>{presence.name}</Text>
       {!!presence.stripcard_count && (
         <View style={styles.stripcard}>

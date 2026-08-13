@@ -1,4 +1,4 @@
-import { ActionType, FeedItem } from "../../stores/feed";
+import { ActionType, FeedItem } from "../../queries/feed";
 import { TouchableOpacity } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Avatar, Card, IconButton } from "react-native-paper";

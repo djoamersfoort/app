@@ -1,13 +1,17 @@
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
-import { Image, StyleSheet, View } from "react-native";
+import { Alert, Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import { useEffect, useState } from "react";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Appbar, Button, Dialog, Portal, Text } from "react-native-paper";
-import { useApi } from "../../stores/media";
-import { User } from "../../__generated__/media";
+import {
+  useDeleteItem,
+  useMediaUser,
+  useSetPreview,
+} from "../../queries/media";
+import { errorMessage } from "../../api/errors";
 
 type Props = StackScreenProps<StackParamList, "Slides">;
 type NavigationProps = NavigationProp<StackParamList>;
@@ -17,30 +21,31 @@ export default function SlidesScreen({ route }: Props) {
   const [page, setPage] = useState(item);
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const api = useApi();
   const navigation = useNavigation<NavigationProps>();
 
-  const [user, setUser] = useState<User>({ id: "", admin: false });
-  useEffect(() => {
-    (async () => {
-      if (!api) return;
+  const { data: user } = useMediaUser();
+  const deleteItem = useDeleteItem(album ?? "");
+  const setPreviewItem = useSetPreview(album ?? "");
 
-      const { data } = await api.users.getUser();
-      setUser(data);
-    })();
-  }, [api]);
+  const admin = user?.admin ?? false;
 
-  function deleteItem() {
+  function askDelete() {
     setDeleteVisible(true);
   }
 
   async function confirmDelete() {
-    if (!api || !album) return;
+    if (!album) return;
 
-    await api.items.deleteItems(album, [items[page].id]);
-    items.splice(page, 1);
-    setDeleteVisible(false);
-    navigation.goBack();
+    try {
+      await deleteItem.mutateAsync(items[page].id);
+      setDeleteVisible(false);
+      // The album query is invalidated by the mutation, so the grid we return
+      // to reloads without this screen having to patch its own params.
+      navigation.goBack();
+    } catch (error) {
+      setDeleteVisible(false);
+      Alert.alert("Verwijderen mislukt", errorMessage(error));
+    }
   }
 
   function cancelDelete() {
@@ -48,10 +53,14 @@ export default function SlidesScreen({ route }: Props) {
   }
 
   async function setPreview() {
-    if (!api || !album) return;
+    if (!album) return;
 
-    await api.albums.setPreview(album, { item_id: items[page].id });
-    setPreviewVisible(true);
+    try {
+      await setPreviewItem.mutateAsync(items[page].id);
+      setPreviewVisible(true);
+    } catch (error) {
+      Alert.alert("Instellen mislukt", errorMessage(error));
+    }
   }
 
   useEffect(() => {
@@ -66,9 +75,9 @@ export default function SlidesScreen({ route }: Props) {
       headerRight: () =>
         album && (
           <>
-            {user.admin && <Appbar.Action icon={"star"} onPress={setPreview} />}
-            {(user.admin || items[page].user === user.id) && (
-              <Appbar.Action icon={"trash-can"} onPress={deleteItem} />
+            {admin && <Appbar.Action icon={"star"} onPress={setPreview} />}
+            {(admin || items[page].user === user?.id) && (
+              <Appbar.Action icon={"trash-can"} onPress={askDelete} />
             )}
           </>
         ),
@@ -115,8 +124,12 @@ export default function SlidesScreen({ route }: Props) {
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={cancelDelete}>Annuleer</Button>
-            <Button onPress={confirmDelete}>Verwijder</Button>
+            <Button onPress={cancelDelete} disabled={deleteItem.isPending}>
+              Annuleer
+            </Button>
+            <Button onPress={confirmDelete} loading={deleteItem.isPending}>
+              Verwijder
+            </Button>
           </Dialog.Actions>
         </Dialog>
 

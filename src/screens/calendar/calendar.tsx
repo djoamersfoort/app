@@ -1,35 +1,30 @@
-import { Appbar, Button } from "react-native-paper";
+import { ActivityIndicator, Appbar, Button, Text } from "react-native-paper";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
-import { parse, VEvent } from "unfucked-ical";
+import { useMemo, useState } from "react";
+import { VEvent } from "unfucked-ical";
 import Item from "../../components/feed/item";
-import { ActionType, FeedItem, sortFeeds } from "../../stores/feed";
+import { ActionType, FeedItem, sortFeeds } from "../../queries/feed";
 import Area from "../../components/area";
+import { useEvents } from "../../queries/calendar";
+import { errorMessage } from "../../api/errors";
 
 export default function CalendarScreen() {
   const [date, setDate] = useState(new Date());
-  const [events, setEvents] = useState<VEvent[]>([]);
-  const [items, setItems] = useState<FeedItem[]>([]);
+  const { data: events, isPending, error } = useEvents();
 
-  useEffect(() => {
-    async function getEvents() {
-      const res = await fetch("https://www.djoamersfoort.nl/feed/eo-events/");
-      const data = await res.text();
+  const items = useMemo(() => {
+    // Normalise into a copy: mutating the state Date in place left the picker
+    // and the filter disagreeing about which day was selected.
+    const from = new Date(date);
+    from.setHours(0, 0, 0, 0);
 
-      setEvents(parse(data).events);
-    }
-
-    getEvents().then();
-  }, []);
-
-  useEffect(() => {
     function nextDate(event: VEvent) {
       if (event.rrule) {
         const next = event.rrule.after(
-          date > event.timeStart ? date : event.timeStart,
+          from > event.timeStart ? from : event.timeStart,
         );
         if (next) return next;
       }
@@ -37,25 +32,24 @@ export default function CalendarScreen() {
       return event.timeStart;
     }
 
-    date.setHours(0, 0, 0, 0);
-    const items = events
+    const entries = (events ?? [])
       .map((event) => {
-        const date = nextDate(event);
+        const occurrence = nextDate(event);
 
         return {
           icon: event.rrule ? "calendar" : "calendar-alert",
           title: event.summary || "unknown",
-          description: date.toLocaleDateString("nl-NL"),
-          date: date.getTime(),
+          description: occurrence.toLocaleDateString("nl-NL"),
+          date: occurrence.getTime(),
           action: {
             type: ActionType.EVENT,
             event: event.serialize(),
           },
         } satisfies FeedItem;
       })
-      .filter((item) => item.date > date.getTime());
+      .filter((item) => item.date > from.getTime());
 
-    setItems(sortFeeds(items).reverse());
+    return sortFeeds(entries).reverse();
   }, [date, events]);
 
   return (
@@ -96,9 +90,21 @@ export default function CalendarScreen() {
           />
 
           <Area title={"Bijzonderheden"} icon={"calendar-alert"}>
-            {items.map((item, index) => (
-              <Item item={item} key={index} />
-            ))}
+            {isPending ? (
+              <ActivityIndicator animating={true} />
+            ) : items.length > 0 ? (
+              <>
+                {items.map((item, index) => (
+                  <Item item={item} key={index} />
+                ))}
+              </>
+            ) : (
+              <Text>
+                {error
+                  ? errorMessage(error)
+                  : "Geen bijzonderheden vanaf deze datum"}
+              </Text>
+            )}
           </Area>
         </View>
       </ScrollView>

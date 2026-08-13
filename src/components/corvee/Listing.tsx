@@ -1,40 +1,28 @@
 import { Button, Card } from "react-native-paper";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { CorveeProfile, getStatus, stateAtom } from "../../stores/corvee";
-import { useContext, useState } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { CORVEE } from "../../env";
-import { useSetAtom } from "jotai";
-
-enum Action {
-  ACKNOWLEDGE = "ack",
-  ABSENT = "absent",
-  INSUFFICIENT = "insuff",
-}
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import {
+  CorveeAction,
+  CorveeProfile,
+  useCorveeAction,
+} from "../../queries/corvee";
+import { errorMessage } from "../../api/errors";
 
 export default function Listing({ selected }: { selected: CorveeProfile }) {
-  const [loading, setLoading] = useState<Set<Action>>(new Set());
-  const setState = useSetAtom(stateAtom);
-  const authState = useContext(AuthContext);
+  // Which button is spinning; the mutation itself only knows that one is.
+  const [pending, setPending] = useState<CorveeAction | null>(null);
+  const corveeAction = useCorveeAction();
 
-  function action(id: string, action: Action) {
+  function action(id: string, action: CorveeAction) {
     return async function () {
-      if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
-      setLoading(loading.add(action));
-
-      const token = await authState.token;
-      await fetch(`${CORVEE}/api/v1/${action}/${id}`, {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      });
-
-      const state = await getStatus(token);
-      setState(state);
-
-      loading.delete(action);
-      setLoading(loading);
+      setPending(action);
+      try {
+        await corveeAction.mutateAsync({ id, action });
+      } catch (error) {
+        Alert.alert("Actie mislukt", errorMessage(error));
+      } finally {
+        setPending(null);
+      }
     };
   }
 
@@ -49,22 +37,25 @@ export default function Listing({ selected }: { selected: CorveeProfile }) {
         <ScrollView horizontal={true}>
           <View style={styles.actions}>
             <Button
-              loading={loading.has(Action.ACKNOWLEDGE)}
-              onPress={action(selected.id, Action.ACKNOWLEDGE)}
+              loading={pending === CorveeAction.ACKNOWLEDGE}
+              disabled={!!pending}
+              onPress={action(selected.id, CorveeAction.ACKNOWLEDGE)}
               mode={"contained"}
             >
               Aftekenen
             </Button>
             <Button
-              loading={loading.has(Action.ABSENT)}
-              onPress={action(selected.id, Action.ABSENT)}
+              loading={pending === CorveeAction.ABSENT}
+              disabled={!!pending}
+              onPress={action(selected.id, CorveeAction.ABSENT)}
               mode={"contained-tonal"}
             >
               Afwezig
             </Button>
             <Button
-              loading={loading.has(Action.INSUFFICIENT)}
-              onPress={action(selected.id, Action.INSUFFICIENT)}
+              loading={pending === CorveeAction.INSUFFICIENT}
+              disabled={!!pending}
+              onPress={action(selected.id, CorveeAction.INSUFFICIENT)}
               mode={"contained-tonal"}
             >
               Onvoldoende

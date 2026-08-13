@@ -4,10 +4,9 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { useContext, useEffect, useState } from "react";
-import { Album } from "../../__generated__/media";
-import { useApi } from "../../stores/media";
+import { useEffect } from "react";
 import { StackScreenProps } from "@react-navigation/stack";
 import { StackParamList } from "../../../App";
 import {
@@ -19,45 +18,26 @@ import {
 } from "react-native-paper";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import AuthContext, { Authed } from "../../auth";
-import { File } from "expo-file-system";
+import { useAlbum, useUploadItems } from "../../queries/media";
+import { errorMessage } from "../../api/errors";
 
 type Props = StackScreenProps<StackParamList, "Album">;
 type NavigationProps = NavigationProp<StackParamList>;
 
 export default function AlbumScreen({ route }: Props) {
   const navigation = useNavigation<NavigationProps>();
-  const authState = useContext(AuthContext);
-  const api = useApi();
-  const [album, setAlbum] = useState<Album>();
-  const [uploadVisible, setUploadVisible] = useState<boolean>(false);
+  const { data: album, isPending, error } = useAlbum(route.params.album);
+  const upload = useUploadItems(route.params.album);
 
   const [_cameraStatus, requestPermissions, getPermissions] =
     ImagePicker.useCameraPermissions();
 
-  async function upload(images: ImagePicker.ImagePickerAsset[]) {
-    if (authState.authenticated !== Authed.AUTHENTICATED || !api) return;
-
-    setUploadVisible(true);
-    const formData = new FormData();
-    images.forEach((asset) => {
-      formData.append("items", new File(asset.uri));
-    });
-
-    await fetch(
-      `https://media.djoamersfoort.nl/api/items/${route.params.album}`,
-      {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${await authState.token}`,
-        },
-        body: formData,
-      },
-    );
-
-    const { data } = await api.albums.getAlbum(route.params.album);
-    setAlbum(data);
-    setUploadVisible(false);
+  async function submit(images: ImagePicker.ImagePickerAsset[]) {
+    try {
+      await upload.mutateAsync(images);
+    } catch (uploadError) {
+      Alert.alert("Uploaden mislukt", errorMessage(uploadError));
+    }
   }
 
   async function selectImages() {
@@ -67,7 +47,7 @@ export default function AlbumScreen({ route }: Props) {
     });
     if (result.canceled) return;
 
-    await upload(result.assets);
+    await submit(result.assets);
   }
 
   async function captureImages() {
@@ -93,32 +73,19 @@ export default function AlbumScreen({ route }: Props) {
     });
     if (result.canceled) return;
 
-    await upload(result.assets);
+    await submit(result.assets);
   }
 
   useEffect(() => {
-    async function fetchAlbum() {
-      if (!api) return;
-
-      navigation.setOptions({
-        headerRight: () => (
-          <>
-            <Appbar.Action icon={"folder-image"} onPress={selectImages} />
-            <Appbar.Action icon={"camera"} onPress={captureImages} />
-          </>
-        ),
-      });
-
-      navigation.addListener("focus", async () => {
-        const { data: album } = await api.albums.getAlbum(route.params.album);
-        setAlbum(album);
-      });
-      const { data: album } = await api.albums.getAlbum(route.params.album);
-      setAlbum(album);
-    }
-
-    fetchAlbum().then();
-  }, [api]);
+    navigation.setOptions({
+      headerRight: () => (
+        <>
+          <Appbar.Action icon={"folder-image"} onPress={selectImages} />
+          <Appbar.Action icon={"camera"} onPress={captureImages} />
+        </>
+      ),
+    });
+  }, [navigation]);
 
   function openImage(image: number) {
     if (!album) return;
@@ -130,7 +97,14 @@ export default function AlbumScreen({ route }: Props) {
     });
   }
 
-  if (!album) return <ActivityIndicator animating={true} />;
+  if (isPending) return <ActivityIndicator animating={true} />;
+  if (error || !album)
+    return (
+      <View style={styles.message}>
+        <Text>{errorMessage(error)}</Text>
+      </View>
+    );
+
   return (
     <>
       <FlatList
@@ -148,7 +122,7 @@ export default function AlbumScreen({ route }: Props) {
         )}
       />
       <Portal>
-        <Dialog visible={uploadVisible}>
+        <Dialog visible={upload.isPending}>
           <Dialog.Title>Uploaden...</Dialog.Title>
           <Dialog.Content>
             <ActivityIndicator animating={true} />
@@ -170,5 +144,9 @@ const styles = StyleSheet.create({
   image: {
     flex: 1,
     resizeMode: "cover",
+  },
+  message: {
+    padding: 20,
+    alignItems: "center",
   },
 });

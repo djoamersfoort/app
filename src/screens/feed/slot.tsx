@@ -1,66 +1,42 @@
 import { StackScreenProps } from "@react-navigation/stack";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Chip, Text } from "react-native-paper";
-import { useContext, useEffect, useState } from "react";
-import { membersAtom, Slot, slotsAtom } from "../../stores/register";
-import { useAtom } from "jotai";
+import { ActivityIndicator, Button, Chip, Text } from "react-native-paper";
+import { useRegistration, useToggleRegistration } from "../../queries/register";
 import { StackParamList } from "../../../App";
-import AuthContext, { Authed } from "../../auth";
-import { AANMELDEN } from "../../env";
+import { Authed, useAuth } from "../../auth";
 import PresenceCard from "../../components/register/precenseCard";
 import Area from "../../components/area";
+import { errorMessage } from "../../api/errors";
 
 type Props = StackScreenProps<StackParamList, "Slot">;
 
-export default function SlotScreen({ route, navigation }: Props) {
-  const [slots, setSlots] = useAtom(slotsAtom);
-  if (!slots) return <></>;
+export default function SlotScreen({ route }: Props) {
+  // Hooks run unconditionally: the previous version returned early when the
+  // slots had not loaded yet, which changed the hook order between renders.
+  const { data, isPending } = useRegistration();
+  const toggleRegistration = useToggleRegistration();
+  const authState = useAuth();
 
-  const [slot, setSlot] = useState<Slot>(slots[route.params.slot]);
-  const [loading, setLoading] = useState(false);
-  const [members] = useAtom(membersAtom);
-
-  const authState = useContext(AuthContext);
+  const slot = data?.slots[route.params.slot];
+  const members = data?.members ?? [];
 
   async function register() {
-    setLoading(true);
-    const token =
-      authState.authenticated === Authed.AUTHENTICATED
-        ? await authState.token
-        : null;
-    if (token) {
-      const { error }: { error: string | undefined } = await fetch(
-        `${AANMELDEN}/api/v1/${slot.is_registered ? "deregister" : "register"}/${slot.name}/${slot.pod}`,
-        {
-          headers: {
-            authorization: `Bearer ${token}`,
-          },
-        },
-      ).then((res) => res.json());
+    if (!slot) return;
 
-      if (error) {
-        setLoading(false);
-        return Alert.alert(error);
-      }
-    } else {
-      if (slot.is_registered) {
-        slot.available++;
-        slot.taken--;
-      } else {
-        slot.available--;
-        slot.taken++;
-      }
-      slot.is_registered = !slot.is_registered;
+    try {
+      await toggleRegistration.mutateAsync(slot);
+    } catch (error) {
+      Alert.alert(errorMessage(error));
     }
   }
 
-  useEffect(() => {
-    setSlot(slots[route.params.slot]);
-    setLoading(false);
-  }, [slots]);
-
+  if (isPending) return <ActivityIndicator animating={true} />;
   if (!slot) return <Text>Something went wrong!</Text>;
+
+  const isTutor =
+    authState.authenticated === Authed.AUTHENTICATED &&
+    authState.user.account_type.includes("begeleider");
 
   return (
     <View style={styles.slot}>
@@ -77,11 +53,9 @@ export default function SlotScreen({ route, navigation }: Props) {
                 </Area>
               )}
             {slot.announcement && (
-              <>
-                <Area title={"Aankondiging"} icon={"bullhorn"}>
-                  <Text variant={"titleSmall"}>{slot.announcement}</Text>
-                </Area>
-              </>
+              <Area title={"Aankondiging"} icon={"bullhorn"}>
+                <Text variant={"titleSmall"}>{slot.announcement}</Text>
+              </Area>
             )}
             <Area title={"Datum"} icon={"calendar"}>
               <Text variant={"titleSmall"}>
@@ -112,11 +86,9 @@ export default function SlotScreen({ route, navigation }: Props) {
             </Area>
 
             {slot.presence && (
-              <>
-                <Area title={"Leden"} icon={"account-details"}>
-                  <PresenceCard slot={slot} members={members} />
-                </Area>
-              </>
+              <Area title={"Leden"} icon={"account-details"}>
+                <PresenceCard slot={slot} members={members} />
+              </Area>
             )}
           </View>
         </ScrollView>
@@ -125,15 +97,10 @@ export default function SlotScreen({ route, navigation }: Props) {
             style={styles.button}
             labelStyle={{ fontSize: 17 }}
             disabled={
-              loading ||
-              (!slot.is_registered &&
-                slot.available === 0 &&
-                !(
-                  authState.authenticated === Authed.AUTHENTICATED &&
-                  authState.user.account_type.includes("begeleider")
-                ))
+              toggleRegistration.isPending ||
+              (!slot.is_registered && slot.available === 0 && !isTutor)
             }
-            loading={loading}
+            loading={toggleRegistration.isPending}
             contentStyle={{ height: 50 }}
             mode={slot.is_registered ? "outlined" : "contained"}
             onPress={register}

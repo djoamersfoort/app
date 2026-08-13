@@ -2,8 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import FeedScreen from "./feed/feed";
 import MediaScreen from "./media/media";
 import SettingsScreen from "./settings";
-import { useContext } from "react";
-import AuthContext, { Authed } from "../auth";
+import { Authed, useAuth } from "../auth";
 import CalendarScreen from "./calendar/calendar";
 import CorveeScreen from "./corvee/corvee";
 import { BottomNavigation } from "react-native-paper";
@@ -13,7 +12,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 const Tab = createBottomTabNavigator();
 
 export default function HomeScreen() {
-  const authState = useContext(AuthContext);
+  const authState = useAuth();
 
   return (
     <Tab.Navigator

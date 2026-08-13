@@ -1,12 +1,7 @@
-import { useAtomValue } from "jotai";
-import { CorveeProfile, stateAtom } from "../../stores/corvee";
+import { CorveeProfile, CorveeState } from "../../queries/corvee";
 import Listing from "./Listing";
 
-export default function Selected() {
-  const state = useAtomValue(stateAtom);
-
-  if (!state) return <></>;
-
+export default function Selected({ state }: { state: CorveeState }) {
   return state.current.map((selected: CorveeProfile) => (
     <Listing key={selected.id} selected={selected} />
   ));

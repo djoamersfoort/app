@@ -14,12 +14,10 @@ import {
 } from "date-fns";
 import { nl } from "date-fns/locale";
 import MapView, { Marker } from "react-native-maps";
-import { getSlots, slotsAtom } from "../../stores/register";
-import { useAtom } from "jotai";
-import { useContext } from "react";
-import AuthContext, { Authed } from "../../auth";
+import { useRegistration } from "../../queries/register";
 import * as WebBrowser from "expo-web-browser";
 import Area from "../../components/area";
+import { errorMessage } from "../../api/errors";
 
 function friday() {
   return isFriday(new Date()) ? new Date() : nextFriday(new Date());
@@ -49,8 +47,7 @@ function formatDateRange(startDate: Date, endDate: Date) {
 type Props = StackScreenProps<StackParamList, "Event">;
 
 export default function EventScreen({ route, navigation }: Props) {
-  const authState = useContext(AuthContext);
-  const [slots, setSlots] = useAtom(slotsAtom);
+  const { data, refetch } = useRegistration();
   const event = deserializeComponent<VEvent>(route.params.event);
 
   function getDescription() {
@@ -103,19 +100,23 @@ export default function EventScreen({ route, navigation }: Props) {
   }
 
   async function register() {
-    const token =
-      authState.authenticated === Authed.AUTHENTICATED
-        ? await authState.token
-        : null;
+    let slots = data?.slots ?? [];
 
-    if (!slots || slots.length === 0) await getSlots(token);
-    const slot = slots!.findIndex((slot) =>
+    if (slots.length === 0) {
+      try {
+        slots = (await refetch()).data?.slots ?? [];
+      } catch (error) {
+        return Alert.alert("Aanmelden mislukt", errorMessage(error));
+      }
+    }
+
+    const slot = slots.findIndex((slot) =>
       isSameDay(
         new Date(slot.date),
         event.rrule?.after(new Date()) || new Date(),
       ),
     );
-    if (slot === -1 || !slots) return Alert.alert("Dag niet gevonden");
+    if (slot === -1) return Alert.alert("Dag niet gevonden");
 
     navigation.push("Slot", {
       title: slots[slot].description,

@@ -1,14 +1,13 @@
-import { useAtomValue } from "jotai/index";
-import { datesAtom, getSlots, slotsAtom } from "../../stores/register";
-import { useContext, useMemo } from "react";
-import AuthContext, { Authed } from "../../auth";
+import { useMemo } from "react";
+import { Alert } from "react-native";
 import {
   MultiChange,
   MultiConfirm,
 } from "react-native-paper-dates/lib/typescript/Date/Calendar";
 import { format, subDays } from "date-fns";
-import { AANMELDEN } from "../../env";
 import { DatePickerModal } from "react-native-paper-dates";
+import { useRegistration, useUpdateFutureDates } from "../../queries/register";
+import { errorMessage } from "../../api/errors";
 import logging from "../../logging";
 
 export default function Calendar({
@@ -18,8 +17,8 @@ export default function Calendar({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const slots = useAtomValue(slotsAtom);
-  const dates = useAtomValue(datesAtom);
+  const { data } = useRegistration();
+  const updateDates = useUpdateFutureDates();
 
   const addedDates = useMemo(() => new Set<string>(), []);
   const removedDates = useMemo(() => new Set<string>(), []);
@@ -27,11 +26,10 @@ export default function Calendar({
     () =>
       [6, 0, 1, 2, 3, 4, 5].filter(
         (_, day) =>
-          !slots?.find((slot) => new Date(slot.date).getDay() === day),
+          !data?.slots.find((slot) => new Date(slot.date).getDay() === day),
       ),
-    [slots],
+    [data?.slots],
   );
-  const authState = useContext(AuthContext);
 
   const onChange: MultiChange = ({ datePressed, change }) => {
     logging.log("CALENDAR", `Date ${datePressed} changed to ${change}`);
@@ -48,25 +46,21 @@ export default function Calendar({
   const saveDates: MultiConfirm = async () => {
     setOpen(false);
 
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
-    const token = await authState.token;
-    const result = await fetch(`${AANMELDEN}/api/v1/future`, {
-      method: "PATCH",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        add: Array.from(addedDates.values()),
-        remove: Array.from(removedDates.values()),
-      }),
-    });
-    logging.log("CALENDAR", `Result: ${result.status}, ${await result.text()}`);
-    await getSlots(token);
-
+    const add = Array.from(addedDates.values());
+    const remove = Array.from(removedDates.values());
     addedDates.clear();
     removedDates.clear();
+
+    if (add.length === 0 && remove.length === 0) return;
+
+    try {
+      await updateDates.mutateAsync({ add, remove });
+    } catch (error) {
+      // Previously the response status was only written to the log, so a
+      // rejected change looked like it had been saved.
+      logging.log("CALENDAR", `Saving dates failed: ${error}`);
+      Alert.alert("Opslaan mislukt", errorMessage(error));
+    }
   };
 
   return (
@@ -78,7 +72,7 @@ export default function Calendar({
       moreLabel={""}
       visible={open}
       onDismiss={() => setOpen(false)}
-      dates={dates}
+      dates={data?.dates ?? []}
       onChange={onChange}
       onConfirm={saveDates}
       startWeekOnMonday={true}

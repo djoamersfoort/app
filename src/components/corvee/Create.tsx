@@ -1,48 +1,28 @@
-import { StyleSheet, View } from "react-native";
-import PresenceCard from "../register/precenseCard";
-import { useAtom, useAtomValue } from "jotai";
-import { membersAtom, Slot, slotsAtom } from "../../stores/register";
-import { getStatus, stateAtom } from "../../stores/corvee";
-import { useContext, useEffect, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
-import { CORVEE } from "../../env";
-import AuthContext, { Authed } from "../../auth";
+import PresenceCard from "../register/precenseCard";
+import { useRegistration } from "../../queries/register";
+import { CorveeState, useCreateCorvee } from "../../queries/corvee";
+import { errorMessage } from "../../api/errors";
 
-export default function Create() {
-  const slots = useAtomValue(slotsAtom);
-  const members = useAtomValue(membersAtom);
-  const [state, setState] = useAtom(stateAtom);
-  const [loading, setLoading] = useState(false);
+export default function Create({ state }: { state: CorveeState }) {
+  const { data } = useRegistration();
+  const createCorvee = useCreateCorvee();
   const theme = useTheme();
-  const authState = useContext(AuthContext);
 
-  const [slot, setSlot] = useState<Slot>();
-
-  useEffect(() => {
-    if (!slots || !state) return setSlot(undefined);
-
-    setSlot(
-      slots.find((slot) => slot.pod === state.pod && slot.name === state.day),
-    );
-  }, [slots, state]);
+  const slot = data?.slots.find(
+    (slot) => slot.pod === state.pod && slot.name === state.day,
+  );
 
   async function create() {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-
-    setLoading(true);
-    const token = await authState.token;
-    await fetch(`${CORVEE}/api/v1/renew`, {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    });
-
-    const state = await getStatus(token);
-    setLoading(false);
-    setState(state);
+    try {
+      await createCorvee.mutateAsync();
+    } catch (error) {
+      Alert.alert("Aanmaken mislukt", errorMessage(error));
+    }
   }
 
-  if (!slot) return;
+  if (!slot) return null;
 
   return (
     <>
@@ -55,9 +35,14 @@ export default function Create() {
         <Text variant={"titleMedium"} style={styles.text}>
           Wie is er aanwezig?
         </Text>
-        <PresenceCard slot={slot} members={members} />
+        <PresenceCard slot={slot} members={data?.members ?? []} />
       </View>
-      <Button mode={"contained"} onPress={create} loading={loading}>
+      <Button
+        mode={"contained"}
+        onPress={create}
+        loading={createCorvee.isPending}
+        disabled={createCorvee.isPending}
+      >
         Maak lijst aan
       </Button>
     </>
