@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DomUtils, parseDocument } from "htmlparser2";
 import { Asset } from "expo-asset";
@@ -65,7 +64,7 @@ async function fetchRSS(signal?: AbortSignal): Promise<FeedItem[]> {
   const xml = await requestText(RSS_URL, { signal });
   const document = parseDocument(xml, { xmlMode: true });
 
-  return DomUtils.getElementsByTagName("item", document, true)
+  const items = DomUtils.getElementsByTagName("item", document, true)
     .map((item) => {
       const author =
         childText(item, "dc:creator") || childText(item, "author") || "Iemand";
@@ -73,8 +72,8 @@ async function fetchRSS(signal?: AbortSignal): Promise<FeedItem[]> {
 
       return {
         icon: "post",
-        title: `${author} heeft een nieuw artikel gepost`,
-        description: childText(item, "title"),
+        title: childText(item, "title"),
+        description: `${author} heeft een nieuw artikel gepost`,
         date: Number.isNaN(published) ? undefined : published,
         action: {
           type: ActionType.LINK,
@@ -83,6 +82,8 @@ async function fetchRSS(signal?: AbortSignal): Promise<FeedItem[]> {
       } satisfies FeedItem;
     })
     .filter((item) => item.action.type === ActionType.LINK && item.action.href);
+
+  return sortFeeds(items);
 }
 
 async function fetchAnnouncements(
@@ -117,51 +118,42 @@ async function fetchAnnouncements(
 
   if (!Array.isArray(announcements)) return [];
 
-  return announcements.map((announcement, index) => ({
-    icon: "bullhorn",
-    title: announcement.title,
-    description: announcement.description,
-    date: new Date(announcement.date).getTime(),
-    action: {
-      type: ActionType.VIEW,
-      id: announcement.id ?? `announcement-${index}`,
-      source: announcement.content,
-    },
-  }));
+  return sortFeeds(
+    announcements.map((announcement, index) => ({
+      icon: "bullhorn",
+      title: announcement.description,
+      description: announcement.title,
+      date: new Date(announcement.date).getTime(),
+      action: {
+        type: ActionType.VIEW,
+        id: announcement.id ?? `announcement-${index}`,
+        source: announcement.content,
+      },
+    })),
+  );
 }
 
 /**
- * The public RSS feed and the member announcements load independently: one
- * failing (or being slow) must not blank out the other.
+ * Articles from the public site. Kept separate from announcements so the home
+ * screen can present them as their own section rather than one merged list.
  */
-export function useFeed() {
-  const token = useTokenProvider();
-  const scope = useScope();
-
-  const rss = useQuery({
+export function useArticles() {
+  return useQuery({
     queryKey: keys.rss(),
     staleTime: 5 * 60_000,
     queryFn: ({ signal }) => fetchRSS(signal),
   });
+}
 
-  const announcements = useQuery({
+/** Member announcements, or the bundled demo notice when signed out. */
+export function useAnnouncements() {
+  const token = useTokenProvider();
+  const scope = useScope();
+
+  return useQuery({
     queryKey: keys.announcements(scope),
     queryFn: ({ signal }) => fetchAnnouncements(token, signal),
   });
-
-  const items = useMemo(
-    () => sortFeeds(rss.data ?? [], announcements.data ?? []),
-    [rss.data, announcements.data],
-  );
-
-  return {
-    items,
-    isPending: rss.isPending || announcements.isPending,
-    error: rss.error ?? announcements.error,
-    refetch: async () => {
-      await Promise.all([rss.refetch(), announcements.refetch()]);
-    },
-  };
 }
 
 /**
@@ -170,9 +162,9 @@ export function useFeed() {
  * being serialised into navigation state.
  */
 export function useAnnouncement(id: string) {
-  const { items, isPending, error } = useFeed();
+  const { data, isPending, error } = useAnnouncements();
 
-  const item = items.find(
+  const item = data?.find(
     (entry) => entry.action.type === ActionType.VIEW && entry.action.id === id,
   );
 

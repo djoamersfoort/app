@@ -1,23 +1,16 @@
-import {
-  Alert,
-  FlatList,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, FlatList } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  Appbar,
-  Dialog,
-  Portal,
-  Text,
-} from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
-import { useAlbum, useUploadItems } from "../../queries/media";
-import { errorMessage } from "../../api/errors";
-import { param } from "../../routes";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { Text } from "@/components/ui/text";
+import { Image } from "@/components/ui/image";
+import { Pressable } from "@/components/ui/pressable";
+import { Spinner } from "@/components/ui/spinner";
+import { Center } from "@/components/ui/center";
+import { useAlbum, useUploadItems } from "@/queries/media";
+import { HeaderIconButton, Placeholder } from "@/components/screen";
+import { param } from "@/routes";
 
 export default function AlbumScreen() {
   const params = useLocalSearchParams<{ album?: string; title?: string }>();
@@ -66,17 +59,6 @@ export default function AlbumScreen() {
     upload.mutate(result.assets);
   }
 
-  function openImage(image: number) {
-    if (!album) return;
-
-    // Only the album id and the index travel in the route; the items stay in
-    // the query cache instead of being serialised into navigation state.
-    router.push({
-      pathname: "/slides",
-      params: { album: album.id, index: image },
-    });
-  }
-
   // Declared as route options rather than pushed imperatively through
   // navigation.setOptions, which is the Expo Router way of doing this.
   const header = (
@@ -85,72 +67,79 @@ export default function AlbumScreen() {
         title: param(params.title),
         headerRight: () => (
           <>
-            <Appbar.Action icon={"folder-image"} onPress={selectImages} />
-            <Appbar.Action icon={"camera"} onPress={captureImages} />
+            <HeaderIconButton
+              icon="image-multiple-outline"
+              label="Kies uit bibliotheek"
+              onPress={selectImages}
+            />
+            <HeaderIconButton
+              icon="camera-outline"
+              label="Maak een foto"
+              onPress={captureImages}
+            />
           </>
         ),
       }}
     />
   );
 
-  if (isPending)
+  if (isPending || error || !album)
     return (
-      <>
+      <Box className="flex-1 bg-background">
         {header}
-        <ActivityIndicator animating={true} />
-      </>
-    );
-  if (error || !album)
-    return (
-      <View style={styles.message}>
-        {header}
-        <Text>{errorMessage(error)}</Text>
-      </View>
+        <Placeholder
+          isPending={isPending}
+          error={error}
+          icon="image-off-outline"
+          empty="Dit album kon niet geladen worden"
+        />
+      </Box>
     );
 
   return (
-    <>
+    <Box className="flex-1 bg-background">
       {header}
+
+      {upload.isPending && (
+        <VStack className="items-center gap-2 border-b border-border bg-card px-4 py-3">
+          <Spinner />
+          <Text size="sm" className="text-muted-foreground">
+            Bezig met uploaden, dit kan even duren...
+          </Text>
+        </VStack>
+      )}
+
       <FlatList
         numColumns={3}
-        initialNumToRender={3}
+        initialNumToRender={12}
         data={album.items}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ gap: 3, padding: 3 }}
+        columnWrapperStyle={{ gap: 3 }}
         renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => openImage(index)}
+          <Pressable
+            className="aspect-square flex-1 overflow-hidden rounded-lg active:opacity-70"
+            onPress={() =>
+              router.push({
+                pathname: "/slides",
+                params: { album: album.id, index },
+              })
+            }
           >
-            <Image source={{ uri: item.cover_path }} style={styles.image} />
-          </TouchableOpacity>
+            <Image
+              source={{ uri: item.cover_path }}
+              alt=""
+              className="h-full w-full"
+              resizeMode="cover"
+            />
+          </Pressable>
         )}
+        ListEmptyComponent={
+          <Center className="py-16">
+            <Text className="text-muted-foreground">Dit album is nog leeg</Text>
+          </Center>
+        }
       />
-      <Portal>
-        <Dialog visible={upload.isPending}>
-          <Dialog.Title>Uploaden...</Dialog.Title>
-          <Dialog.Content>
-            <ActivityIndicator animating={true} />
-            <Text variant="bodyMedium">
-              Bezig met uploaden, dit kan even duren...
-            </Text>
-          </Dialog.Content>
-        </Dialog>
-      </Portal>
-    </>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  item: {
-    flex: 1 / 3,
-    aspectRatio: 1,
-  },
-  image: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  message: {
-    padding: 20,
-    alignItems: "center",
-  },
-});

@@ -1,59 +1,94 @@
-import { Appbar } from "react-native-paper";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import Listing from "../../components/register/slot-list";
-import Feed from "../../components/feed/news";
 import { useState } from "react";
-import { useFeed } from "../../queries/feed";
-import { useRegistration } from "../../queries/register";
+import { RefreshControl, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import logging from "../../logging";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Box } from "@/components/ui/box";
+import { useArticles, useAnnouncements } from "@/queries/feed";
+import { useRegistration } from "@/queries/register";
+import { useAlbums } from "@/queries/media";
+import { Authed, useAuth } from "@/auth";
+import {
+  ScreenHeader,
+  HeaderIconButton,
+  useTabBarInset,
+} from "@/components/screen";
+import SlotCards from "@/components/register/slot-cards";
+import AlbumRow from "@/components/media/album-row";
+import ArticleRow from "@/components/feed/article-row";
+import Announcements from "@/components/feed/announcements";
+import logging from "@/logging";
 
-export default function FeedScreen() {
+export default function HomeScreen() {
   const router = useRouter();
+  const auth = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const tabBarInset = useTabBarInset();
 
-  // Both hooks are also used by the children below; React Query dedupes them
-  // into a single request per key.
+  // The sections below use these same hooks; React Query dedupes them into one
+  // request per key, so this only exists to drive pull-to-refresh.
   const registration = useRegistration();
-  const feed = useFeed();
+  const albums = useAlbums();
+  const articles = useArticles();
+  const announcements = useAnnouncements();
+
+  const authenticated = auth.authenticated === Authed.AUTHENTICATED;
 
   async function refresh() {
     logging.log("FEED", "Refreshing feed");
 
     setRefreshing(true);
     try {
-      await Promise.all([registration.refetch(), feed.refetch()]);
+      await Promise.all([
+        registration.refetch(),
+        articles.refetch(),
+        announcements.refetch(),
+        authenticated ? albums.refetch() : Promise.resolve(),
+      ]);
     } finally {
       setRefreshing(false);
     }
   }
 
   return (
-    <>
-      <Appbar.Header>
-        <Appbar.Content title={"Home"} />
-        <Appbar.Action
-          icon={"magnify"}
-          onPress={() => router.push("/search")}
-        />
-      </Appbar.Header>
+    <Box className="flex-1 bg-background">
+      <ScreenHeader
+        title="Home"
+        subtitle={
+          auth.authenticated === Authed.AUTHENTICATED
+            ? `Hoi ${auth.user.given_name}`
+            : "Welkom bij DJO"
+        }
+        action={
+          <HStack className="items-center">
+            <HeaderIconButton
+              icon="magnify"
+              label="Zoeken"
+              onPress={() => router.push("/search")}
+            />
+            <HeaderIconButton
+              icon="cog-outline"
+              label="Instellingen"
+              onPress={() => router.push("/settings")}
+            />
+          </HStack>
+        }
+      />
+
       <ScrollView
+        contentContainerStyle={{ paddingBottom: tabBarInset }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={refresh} />
         }
       >
-        <View style={styles.container}>
-          <Listing />
-          <Feed />
-        </View>
+        <VStack className="gap-9 pt-6">
+          <SlotCards />
+          {/* Media is member-only, matching the tab that hosts the full page. */}
+          {authenticated && <AlbumRow />}
+          <ArticleRow />
+          <Announcements />
+        </VStack>
       </ScrollView>
-    </>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    gap: 10,
-  },
-});

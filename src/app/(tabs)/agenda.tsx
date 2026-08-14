@@ -1,19 +1,25 @@
-import { ActivityIndicator, Appbar, Button, Text } from "react-native-paper";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Platform, ScrollView } from "react-native";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
-import { useMemo, useState } from "react";
 import { VEvent } from "unfucked-ical";
-import Item from "../../components/feed/item";
-import { ActionType, FeedItem, sortFeeds } from "../../queries/feed";
-import Area from "../../components/area";
-import { useEvents } from "../../queries/calendar";
-import { errorMessage } from "../../api/errors";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Text } from "@/components/ui/text";
+import { Button, ButtonText } from "@/components/ui/button";
+import { ActionType, FeedItem, sortFeeds } from "@/queries/feed";
+import { useEvents } from "@/queries/calendar";
+import Item from "@/components/feed/item";
+import Section from "@/components/section";
+import Icon from "@/components/icon";
+import { Placeholder, ScreenHeader, useTabBarInset } from "@/components/screen";
 
 export default function CalendarScreen() {
   const [date, setDate] = useState(new Date());
   const { data: events, isPending, error } = useEvents();
+  const tabBarInset = useTabBarInset();
 
   const items = useMemo(() => {
     // Normalise into a copy: mutating the state Date in place left the picker
@@ -39,7 +45,11 @@ export default function CalendarScreen() {
         return {
           icon: event.rrule ? "calendar" : "calendar-alert",
           title: event.summary || "unknown",
-          description: occurrence.toLocaleDateString("nl-NL"),
+          description: occurrence.toLocaleDateString("nl-NL", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }),
           date: occurrence.getTime(),
           action: {
             type: ActionType.EVENT,
@@ -53,80 +63,70 @@ export default function CalendarScreen() {
   }, [date, events]);
 
   return (
-    <>
-      <Appbar.Header>
-        <Appbar.Content title={"Agenda"} />
-      </Appbar.Header>
-      <ScrollView>
-        <View style={styles.container}>
-          <Area
-            title={"Vanaf"}
-            icon={"calendar"}
-            right={
-              <>
-                {Platform.OS === "ios" && (
+    <Box className="flex-1 bg-background">
+      <ScreenHeader title="Agenda" subtitle="Wat er binnenkort gebeurt" />
+
+      <ScrollView contentContainerStyle={{ paddingBottom: tabBarInset }}>
+        <VStack className="gap-9 pt-6">
+          <Section title="Vanaf" icon="calendar">
+            <Box className="px-4">
+              <HStack className="items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+                <HStack className="items-center gap-2">
+                  <Icon
+                    name="calendar-start"
+                    size={18}
+                    className="text-muted-foreground"
+                  />
+                  <Text className="text-foreground">Toon vanaf</Text>
+                </HStack>
+
+                {Platform.OS === "ios" ? (
                   <DateTimePicker
                     value={date}
-                    onChange={(_, date) => setDate(date as Date)}
+                    onChange={(_, next) => setDate(next as Date)}
                     mode={"date"}
+                    locale="nl-NL"
                   />
-                )}
-                {Platform.OS === "android" && (
+                ) : (
                   <Button
-                    mode={"elevated"}
-                    onPress={() => {
+                    variant="secondary"
+                    size="sm"
+                    onPress={() =>
                       DateTimePickerAndroid.open({
                         value: date,
-                        onChange: (_, date) => setDate(date as Date),
+                        onChange: (_, next) => setDate(next as Date),
                         mode: "date",
-                      });
-                    }}
+                      })
+                    }
                   >
-                    {date.toLocaleDateString("nl-NL")}
+                    <ButtonText>{date.toLocaleDateString("nl-NL")}</ButtonText>
                   </Button>
                 )}
-              </>
-            }
-          />
+              </HStack>
+            </Box>
+          </Section>
 
-          <Area title={"Bijzonderheden"} icon={"calendar-alert"}>
-            {isPending ? (
-              <ActivityIndicator animating={true} />
-            ) : items.length > 0 ? (
-              <>
-                {items.map((item, index) => (
-                  <Item item={item} key={index} />
-                ))}
-              </>
-            ) : (
-              <Text>
-                {error
-                  ? errorMessage(error)
-                  : "Geen bijzonderheden vanaf deze datum"}
-              </Text>
-            )}
-          </Area>
-        </View>
+          <Section title="Bijzonderheden" icon="calendar-alert">
+            <Box className="px-4">
+              {isPending || items.length === 0 ? (
+                <Placeholder
+                  isPending={isPending}
+                  error={error}
+                  icon="calendar-blank-outline"
+                  empty="Geen bijzonderheden vanaf deze datum"
+                  className="rounded-2xl border border-border bg-card"
+                />
+              ) : (
+                <VStack className="gap-3">
+                  {items.map((item, index) => (
+                    <Item item={item} key={index} />
+                  ))}
+                </VStack>
+              )}
+            </Box>
+          </Section>
+        </VStack>
       </ScrollView>
-    </>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    gap: 10,
-  },
-  header: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerText: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-});

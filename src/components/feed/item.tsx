@@ -1,59 +1,59 @@
-import { ActionType, FeedItem } from "../../queries/feed";
-import { TouchableOpacity } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-import { Avatar, Card, IconButton } from "react-native-paper";
-import { useRouter } from "expo-router";
-import { encodeParam } from "../../routes";
+import { FeedItem } from "@/queries/feed";
+import { Box } from "@/components/ui/box";
+import { HStack } from "@/components/ui/hstack";
+import { VStack } from "@/components/ui/vstack";
+import { Text } from "@/components/ui/text";
+import { Image } from "@/components/ui/image";
+import { Pressable } from "@/components/ui/pressable";
+import Icon from "../icon";
+import { useOpenFeedItem } from "./actions";
 
+/** A full-width feed row: leading icon, title, description, chevron. */
 export default function Item({ item }: { item: FeedItem }) {
-  const router = useRouter();
-
-  async function open() {
-    switch (item.action.type) {
-      case ActionType.LINK: {
-        await WebBrowser.openBrowserAsync(item.action.href);
-        break;
-      }
-      case ActionType.VIEW: {
-        // Only the id: the announcement's HTML is read back from the feed cache.
-        router.push({
-          pathname: "/web",
-          params: { id: item.action.id, title: item.title },
-        });
-        break;
-      }
-      case ActionType.ITEM: {
-        router.push({
-          pathname: "/item",
-          params: { item: encodeParam(item.action.item), title: item.title },
-        });
-        break;
-      }
-      case ActionType.EVENT: {
-        router.push({
-          pathname: "/event",
-          params: { event: encodeParam(item.action.event), title: item.title },
-        });
-      }
-    }
-  }
+  const open = useOpenFeedItem();
 
   return (
-    <TouchableOpacity onPress={open}>
-      <Card mode={"contained"}>
-        <Card.Title
-          title={item.title}
-          subtitle={item.description}
-          left={(props) =>
-            item.icon.startsWith("http") ? (
-              <Avatar.Image {...props} source={{ uri: item.icon }} />
-            ) : (
-              <Avatar.Icon {...props} icon={item.icon} />
-            )
-          }
-          right={(props) => <IconButton {...props} icon={"chevron-right"} />}
+    <Pressable
+      onPress={() => open(item)}
+      className="rounded-2xl border border-border bg-card p-3 active:opacity-70"
+    >
+      <HStack className="items-center gap-3">
+        {item.icon.startsWith("http") ? (
+          <Image
+            source={{ uri: item.icon }}
+            alt={item.title}
+            className="h-11 w-11 rounded-full"
+          />
+        ) : (
+          <Box className="h-11 w-11 items-center justify-center rounded-full bg-accent">
+            <Icon
+              name={item.icon as never}
+              size={20}
+              className="text-accent-foreground"
+            />
+          </Box>
+        )}
+
+        <VStack className="flex-1">
+          <Text
+            numberOfLines={2}
+            className="font-semibold leading-snug text-foreground"
+          >
+            {item.title}
+          </Text>
+          {!!item.description && (
+            <Text size="sm" numberOfLines={2} className="text-muted-foreground">
+              {item.description}
+            </Text>
+          )}
+        </VStack>
+
+        <Icon
+          name="chevron-right"
+          size={22}
+          className="text-muted-foreground"
         />
-      </Card>
-    </TouchableOpacity>
+      </HStack>
+    </Pressable>
   );
 }

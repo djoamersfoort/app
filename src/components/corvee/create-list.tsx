@@ -1,53 +1,53 @@
-import { StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
+import { VStack } from "@/components/ui/vstack";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import PresenceCard from "../register/presence-card";
-import { useRegistration } from "../../queries/register";
-import { CorveeState, useCreateCorvee } from "../../queries/corvee";
+import { useRegistration } from "@/queries/register";
+import { CorveeState, useCreateCorvee } from "@/queries/corvee";
+import { Placeholder } from "../screen";
 
-export default function Create({ state }: { state: CorveeState }) {
-  const { data } = useRegistration();
+export default function CreateList({ state }: { state: CorveeState }) {
+  const { data, isPending } = useRegistration();
   const createCorvee = useCreateCorvee();
-  const theme = useTheme();
 
   const slot = data?.slots.find(
     (slot) => slot.pod === state.pod && slot.name === state.day,
   );
 
-  if (!slot) return null;
+  if (!slot)
+    return (
+      <Placeholder
+        isPending={isPending}
+        icon="calendar-remove"
+        empty="Geen dag gevonden om corvee voor aan te maken"
+        className="rounded-2xl border border-border bg-card"
+      />
+    );
 
   return (
-    <>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.colors.elevation.level1 },
-        ]}
-      >
-        <Text variant={"titleMedium"} style={styles.text}>
-          Wie is er aanwezig?
-        </Text>
+    <VStack className="gap-4">
+      <VStack className="gap-4 rounded-2xl border border-border bg-card p-4">
+        <VStack>
+          <Heading size="sm" className="text-foreground">
+            Wie is er aanwezig?
+          </Heading>
+          <Text size="xs" className="text-muted-foreground">
+            Vink af wie er is, dan maken we de lijst aan.
+          </Text>
+        </VStack>
+
         <PresenceCard slot={slot} members={data?.members ?? []} />
-      </View>
+      </VStack>
+
       <Button
-        mode={"contained"}
         onPress={() => createCorvee.mutate()}
-        loading={createCorvee.isPending}
-        disabled={createCorvee.isPending}
+        isDisabled={createCorvee.isPending}
+        className="rounded-xl"
       >
-        Maak lijst aan
+        {createCorvee.isPending && <ButtonSpinner />}
+        <ButtonText>Maak lijst aan</ButtonText>
       </Button>
-    </>
+    </VStack>
   );
 }
-
-const styles = StyleSheet.create({
-  text: {
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  card: {
-    padding: 15,
-    borderRadius: 15,
-    flexGrow: 1,
-  },
-});

@@ -1,6 +1,8 @@
+import { useColorScheme } from "react-native";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Authed, useAuth } from "../../auth";
+import { Authed, useAuth } from "@/auth";
+import { theme } from "@/theme";
 
 const { Trigger } = NativeTabs;
 const { Icon, Label, VectorIcon } = Trigger;
@@ -17,12 +19,15 @@ const { Icon, Label, VectorIcon } = Trigger;
  */
 export default function TabsLayout() {
   const auth = useAuth();
+  const colors = useColorScheme() === "dark" ? theme.dark : theme.light;
 
   const authenticated = auth.authenticated === Authed.AUTHENTICATED;
   const tutor = authenticated && auth.user.account_type.includes("begeleider");
 
   return (
-    <NativeTabs>
+    // The native tab bar cannot read CSS variables, so the brand tint is passed
+    // through explicitly.
+    <NativeTabs tintColor={colors.primary}>
       <Trigger name={"index"}>
         <Icon
           sf={"house.fill"}
@@ -58,14 +63,6 @@ export default function TabsLayout() {
           src={<VectorIcon family={MaterialCommunityIcons} name={"video"} />}
         />
         <Label>Media</Label>
-      </Trigger>
-
-      <Trigger name={"settings"}>
-        <Icon
-          sf={{ default: "gearshape", selected: "gearshape.fill" }}
-          src={<VectorIcon family={MaterialCommunityIcons} name={"cog"} />}
-        />
-        <Label>Instellingen</Label>
       </Trigger>
     </NativeTabs>
   );

@@ -1,16 +1,22 @@
 import { useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Appbar, Icon, Text } from "react-native-paper";
-import { useCorveeStatus } from "../../queries/corvee";
-import { useRegistration } from "../../queries/register";
-import CreateList from "../../components/corvee/create-list";
-import ProfileCard from "../../components/corvee/profile-card";
-import { errorMessage } from "../../api/errors";
+import { RefreshControl, ScrollView } from "react-native";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { Center } from "@/components/ui/center";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import { useCorveeStatus } from "@/queries/corvee";
+import { useRegistration } from "@/queries/register";
+import CreateList from "@/components/corvee/create-list";
+import ProfileCard from "@/components/corvee/profile-card";
+import Icon from "@/components/icon";
+import { Placeholder, ScreenHeader, useTabBarInset } from "@/components/screen";
 
 export default function CorveeScreen() {
   const status = useCorveeStatus();
   const registration = useRegistration();
   const [refreshing, setRefreshing] = useState(false);
+  const tabBarInset = useTabBarInset();
 
   async function refresh() {
     setRefreshing(true);
@@ -22,20 +28,20 @@ export default function CorveeScreen() {
   }
 
   const state = status.data;
+  const done = state && "error" in state;
 
   return (
-    <>
-      <Appbar.Header>
-        <Appbar.Content title={"Corvee"} />
-      </Appbar.Header>
+    <Box className="flex-1 bg-background">
+      <ScreenHeader title="Corvee" subtitle="Wie ruimt er vandaag op?" />
+
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: tabBarInset }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={refresh} />
         }
       >
-        <View style={styles.content}>
-          {state && !("error" in state) && (
+        <VStack className="flex-1 gap-4 px-4 pt-6">
+          {state && !done && (
             <>
               {state.current.length === 0 && <CreateList state={state} />}
               {state.current.map((profile) => (
@@ -43,39 +49,36 @@ export default function CorveeScreen() {
               ))}
             </>
           )}
-          {state && "error" in state && (
-            <View style={styles.error}>
-              <Icon size={75} source={"emoticon-happy"} />
-              <Text variant={"titleMedium"}>{state.error}</Text>
-            </View>
+
+          {/* The API reports "nothing to do today" through an error field. */}
+          {done && (
+            <Center className="flex-1 gap-3">
+              <Box className="h-16 w-16 items-center justify-center rounded-full bg-accent">
+                <Icon
+                  name="emoticon-happy-outline"
+                  size={32}
+                  className="text-accent-foreground"
+                />
+              </Box>
+              <Heading size="sm" className="text-center text-foreground">
+                {state.error}
+              </Heading>
+              <Text size="sm" className="text-center text-muted-foreground">
+                Er staat niets open.
+              </Text>
+            </Center>
           )}
-          {/* A failed request is not the same as "niets te doen"; show why. */}
-          {!state && status.isError && (
-            <View style={styles.error}>
-              <Icon size={75} source={"cloud-off-outline"} />
-              <Text variant={"titleMedium"}>{errorMessage(status.error)}</Text>
-            </View>
+
+          {!state && (
+            <Placeholder
+              isPending={status.isPending}
+              error={status.error}
+              icon="cloud-off-outline"
+              className="flex-1"
+            />
           )}
-          {!state && !status.isError && <ActivityIndicator animating={true} />}
-        </View>
+        </VStack>
       </ScrollView>
-    </>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    display: "flex",
-    flexGrow: 1,
-    padding: 10,
-    gap: 10,
-  },
-  error: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "static",
-    flex: 1,
-    gap: 20,
-  },
-});

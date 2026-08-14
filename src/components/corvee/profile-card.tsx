@@ -1,73 +1,74 @@
-import { Button, Card } from "react-native-paper";
-import { ScrollView, StyleSheet, View } from "react-native";
 import { useState } from "react";
-import {
-  CorveeAction,
-  CorveeProfile,
-  useCorveeAction,
-} from "../../queries/corvee";
+import { ScrollView } from "react-native";
+import { Box } from "@/components/ui/box";
+import { HStack } from "@/components/ui/hstack";
+import { VStack } from "@/components/ui/vstack";
+import { Heading } from "@/components/ui/heading";
+import { Image } from "@/components/ui/image";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
+import { CorveeAction, CorveeProfile, useCorveeAction } from "@/queries/corvee";
 
-export default function Listing({ selected }: { selected: CorveeProfile }) {
+export default function ProfileCard({ selected }: { selected: CorveeProfile }) {
   // Which button is spinning; the mutation itself only knows that one is.
   const [pending, setPending] = useState<CorveeAction | null>(null);
   const corveeAction = useCorveeAction();
 
-  function action(id: string, action: CorveeAction) {
+  function run(action: CorveeAction) {
     return () => {
       setPending(action);
       corveeAction.mutate(
-        { id, action },
+        { id: selected.id, action },
         { onSettled: () => setPending(null) },
       );
     };
   }
 
   return (
-    <Card key={selected.id}>
-      <Card.Cover
-        style={{ aspectRatio: 1, height: undefined }}
+    <VStack className="overflow-hidden rounded-3xl border border-border bg-card">
+      <Image
         source={{ uri: selected.picture }}
+        alt={`${selected.first_name} ${selected.last_name}`}
+        className="aspect-square w-full"
+        resizeMode="cover"
       />
-      <Card.Title title={`${selected.first_name} ${selected.last_name}`} />
-      <Card.Actions>
-        <ScrollView horizontal={true}>
-          <View style={styles.actions}>
+
+      <VStack className="gap-3 p-4">
+        <Heading size="md" className="text-foreground">
+          {selected.first_name} {selected.last_name}
+        </Heading>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <HStack className="gap-2">
             <Button
-              loading={pending === CorveeAction.ACKNOWLEDGE}
-              disabled={!!pending}
-              onPress={action(selected.id, CorveeAction.ACKNOWLEDGE)}
-              mode={"contained"}
+              onPress={run(CorveeAction.ACKNOWLEDGE)}
+              isDisabled={!!pending}
+              className="rounded-full"
             >
-              Aftekenen
+              {pending === CorveeAction.ACKNOWLEDGE && <ButtonSpinner />}
+              <ButtonText>Aftekenen</ButtonText>
             </Button>
             <Button
-              loading={pending === CorveeAction.ABSENT}
-              disabled={!!pending}
-              onPress={action(selected.id, CorveeAction.ABSENT)}
-              mode={"contained-tonal"}
+              variant="secondary"
+              onPress={run(CorveeAction.ABSENT)}
+              isDisabled={!!pending}
+              className="rounded-full"
             >
-              Afwezig
+              {pending === CorveeAction.ABSENT && <ButtonSpinner />}
+              <ButtonText>Afwezig</ButtonText>
             </Button>
             <Button
-              loading={pending === CorveeAction.INSUFFICIENT}
-              disabled={!!pending}
-              onPress={action(selected.id, CorveeAction.INSUFFICIENT)}
-              mode={"contained-tonal"}
+              variant="secondary"
+              onPress={run(CorveeAction.INSUFFICIENT)}
+              isDisabled={!!pending}
+              className="rounded-full"
             >
-              Onvoldoende
+              {pending === CorveeAction.INSUFFICIENT && <ButtonSpinner />}
+              <ButtonText>Onvoldoende</ButtonText>
             </Button>
-          </View>
+          </HStack>
         </ScrollView>
-      </Card.Actions>
-    </Card>
+      </VStack>
+      <Box />
+    </VStack>
   );
 }
-
-const styles = StyleSheet.create({
-  actions: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 10,
-    paddingBottom: 10,
-  },
-});

@@ -1,23 +1,29 @@
+import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
-import { useState } from "react";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import {
-  ActivityIndicator,
-  Appbar,
-  Button,
-  Dialog,
-  Portal,
-  Text,
-} from "react-native-paper";
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+} from "@/components/ui/actionsheet";
 import {
   useAlbum,
   useDeleteItem,
   useMediaUser,
   useSetPreview,
-} from "../queries/media";
-import { numberParam, param } from "../routes";
+} from "@/queries/media";
+import { HeaderIconButton, Placeholder } from "@/components/screen";
+import { numberParam, param } from "@/routes";
 
 export default function SlidesScreen() {
   const params = useLocalSearchParams<{ album?: string; index?: string }>();
@@ -25,7 +31,6 @@ export default function SlidesScreen() {
 
   const [page, setPage] = useState(() => numberParam(params.index, 0));
   const [deleteVisible, setDeleteVisible] = useState(false);
-  const [previewVisible, setPreviewVisible] = useState(false);
   const router = useRouter();
 
   // The item list is read from the album query rather than passed through the
@@ -50,14 +55,6 @@ export default function SlidesScreen() {
     });
   }
 
-  function setPreview() {
-    if (!current) return;
-
-    setPreviewItem.mutate(current.id, {
-      onSuccess: () => setPreviewVisible(true),
-    });
-  }
-
   const header = (
     <Stack.Screen
       options={{
@@ -70,10 +67,17 @@ export default function SlidesScreen() {
           : "",
         headerRight: () => (
           <>
-            {admin && <Appbar.Action icon={"star"} onPress={setPreview} />}
+            {admin && (
+              <HeaderIconButton
+                icon="star-outline"
+                label="Als omslag instellen"
+                onPress={() => current && setPreviewItem.mutate(current.id)}
+              />
+            )}
             {(admin || current?.user === user?.id) && (
-              <Appbar.Action
-                icon={"trash-can"}
+              <HeaderIconButton
+                icon="trash-can-outline"
+                label="Verwijderen"
                 onPress={() => setDeleteVisible(true)}
               />
             )}
@@ -83,20 +87,16 @@ export default function SlidesScreen() {
     />
   );
 
-  if (isPending)
+  if (isPending || items.length === 0)
     return (
-      <View style={styles.center}>
+      <Box className="flex-1 bg-background">
         {header}
-        <ActivityIndicator animating={true} />
-      </View>
-    );
-
-  if (items.length === 0)
-    return (
-      <View style={styles.center}>
-        {header}
-        <Text>Er is niets om te tonen</Text>
-      </View>
+        <Placeholder
+          isPending={isPending}
+          icon="image-off-outline"
+          empty="Er is niets om te tonen"
+        />
+      </Box>
     );
 
   function inRange(x: number, y: number, range: number) {
@@ -104,7 +104,7 @@ export default function SlidesScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <Box className="flex-1 bg-black">
       {header}
       <PagerView
         style={{ flex: 1 }}
@@ -129,52 +129,53 @@ export default function SlidesScreen() {
         ))}
       </PagerView>
 
-      <Portal>
-        <Dialog
-          visible={deleteVisible}
-          onDismiss={() => setDeleteVisible(false)}
-        >
-          <Dialog.Title>
-            Weet je zeker dat je dit wilt verwijderen?
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium">
-              Deze actie kan niet ongedaan gemaakt worden!
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button
-              onPress={() => setDeleteVisible(false)}
-              disabled={deleteItem.isPending}
-            >
-              Annuleer
-            </Button>
-            <Button onPress={confirmDelete} loading={deleteItem.isPending}>
-              Verwijder
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+      <Actionsheet
+        isOpen={deleteVisible}
+        onClose={() => setDeleteVisible(false)}
+      >
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
 
-        <Dialog
-          visible={previewVisible}
-          onDismiss={() => setPreviewVisible(false)}
-        >
-          <Dialog.Title>Preview ingesteld!</Dialog.Title>
-          <Dialog.Actions>
-            <Button onPress={() => setPreviewVisible(false)}>OK</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-    </View>
+          <VStack className="w-full gap-4 p-4">
+            <VStack className="gap-1">
+              <Heading size="md" className="text-foreground">
+                Weet je zeker dat je dit wilt verwijderen?
+              </Heading>
+              <Text size="sm" className="text-muted-foreground">
+                Deze actie kan niet ongedaan gemaakt worden.
+              </Text>
+            </VStack>
+
+            <HStack className="gap-3">
+              <Button
+                variant="outline"
+                onPress={() => setDeleteVisible(false)}
+                isDisabled={deleteItem.isPending}
+                className="flex-1 rounded-xl"
+              >
+                <ButtonText>Annuleer</ButtonText>
+              </Button>
+              <Button
+                variant="destructive"
+                onPress={confirmDelete}
+                isDisabled={deleteItem.isPending}
+                className="flex-1 rounded-xl"
+              >
+                {deleteItem.isPending && <ButtonSpinner />}
+                <ButtonText>Verwijder</ButtonText>
+              </Button>
+            </HStack>
+          </VStack>
+        </ActionsheetContent>
+      </Actionsheet>
+    </Box>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   image: {
     width: "100%",
     height: "100%",

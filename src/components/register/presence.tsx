@@ -1,6 +1,8 @@
-import { Presence as PresenceType, useMarkSeen } from "../../queries/register";
-import { Icon, Switch, Text } from "react-native-paper";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "@/components/ui/text";
+import { Switch } from "@/components/ui/switch";
+import { Badge, BadgeText } from "@/components/ui/badge";
+import { Pressable } from "@/components/ui/pressable";
+import { Presence as PresenceType, useMarkSeen } from "@/queries/register";
 
 export default function Presence({ presence }: { presence: PresenceType }) {
   const markSeen = useMarkSeen();
@@ -10,34 +12,28 @@ export default function Presence({ presence }: { presence: PresenceType }) {
   const toggle = () => markSeen.mutate({ presence, seen: !presence.seen });
 
   return (
-    <TouchableOpacity style={styles.presence} onPress={toggle}>
+    <Pressable
+      onPress={toggle}
+      className="flex-row items-center gap-3 rounded-xl px-1 py-1.5 active:opacity-70"
+    >
       <Switch value={presence.seen} onValueChange={toggle} />
-      <Text>{presence.name}</Text>
+      <Text
+        numberOfLines={1}
+        className={
+          presence.seen
+            ? "flex-1 text-foreground"
+            : "flex-1 text-muted-foreground"
+        }
+      >
+        {presence.name}
+      </Text>
       {!!presence.stripcard_count && (
-        <View style={styles.stripcard}>
-          <Icon size={22} source={"clipboard-list"} />
-          <Text>
+        <Badge variant="secondary" className="rounded-full">
+          <BadgeText className="normal-case">
             {presence.stripcard_used} / {presence.stripcard_count}
-          </Text>
-        </View>
+          </BadgeText>
+        </Badge>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  presence: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  stripcard: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: 5,
-  },
-});

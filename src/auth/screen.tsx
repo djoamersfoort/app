@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Text, useTheme } from "react-native-paper";
 import * as AuthSession from "expo-auth-session";
 import { DiscoveryDocument } from "expo-auth-session";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
+import { Pressable } from "@/components/ui/pressable";
+import { Image } from "@/components/ui/image";
 import { CLIENT_ID, SCOPES } from "../env";
 import logging from "../logging";
 import {
@@ -29,7 +35,6 @@ export default function AuthScreen({
   discovery: DiscoveryDocument;
   setAuthenticated: SetAuthState;
 }) {
-  const theme = useTheme();
   const [busy, setBusy] = useState(false);
 
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
@@ -86,45 +91,52 @@ export default function AuthScreen({
   }
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: theme.colors.primaryContainer },
-      ]}
-    >
-      <Button
-        style={styles.button}
-        labelStyle={{ fontSize: 17 }}
-        contentStyle={{ height: 50 }}
-        mode={"contained"}
-        disabled={!request || busy}
-        loading={busy}
-        onPress={() => promptAsync()}
-      >
-        Log in
-      </Button>
-      <Text onPress={guest} style={styles.guest}>
-        Gebruik demo mode
-      </Text>
-    </SafeAreaView>
+    <Box className="flex-1 bg-primary">
+      <SafeAreaView style={{ flex: 1 }}>
+        <VStack className="flex-1 justify-between p-6">
+          <VStack className="flex-1 items-center justify-center gap-4">
+            {/* The app's own icon, rather than a stock glyph. */}
+            <Box className="h-24 w-24 overflow-hidden rounded-3xl bg-primary-foreground">
+              <Image
+                source={require("../../assets/icon.png")}
+                alt="DJO Amersfoort"
+                className="h-full w-full"
+                resizeMode="contain"
+              />
+            </Box>
+            <VStack className="gap-1">
+              <Heading
+                size="3xl"
+                className="text-center text-primary-foreground"
+              >
+                DJO Amersfoort
+              </Heading>
+              <Text className="text-center text-primary-foreground/70">
+                Meld je aan, bekijk de agenda en blijf op de hoogte.
+              </Text>
+            </VStack>
+          </VStack>
+
+          <VStack className="gap-2">
+            <Button
+              size="lg"
+              variant="secondary"
+              isDisabled={!request || busy}
+              onPress={() => promptAsync()}
+              className="rounded-2xl"
+            >
+              {busy && <ButtonSpinner />}
+              <ButtonText>Log in</ButtonText>
+            </Button>
+
+            <Pressable onPress={guest} className="py-3 active:opacity-70">
+              <Text className="text-center text-primary-foreground/80">
+                Gebruik demo mode
+              </Text>
+            </Pressable>
+          </VStack>
+        </VStack>
+      </SafeAreaView>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: "100%",
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: "flex-end",
-  },
-  button: {
-    margin: 15,
-    marginBottom: 0,
-    borderRadius: 25,
-  },
-  guest: {
-    width: "100%",
-    textAlign: "center",
-    padding: 15,
-  },
-});

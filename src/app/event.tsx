@@ -1,10 +1,17 @@
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView } from "react-native";
 import {
   deserializeComponent,
   SerializedComponent,
   VEvent,
 } from "unfucked-ical";
-import { Button, Text } from "react-native-paper";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import { Button, ButtonText } from "@/components/ui/button";
+import Icon from "@/components/icon";
+import { Placeholder } from "@/components/screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { convert } from "html-to-text";
 import {
@@ -19,7 +26,6 @@ import { nl } from "date-fns/locale";
 import MapView, { Marker } from "react-native-maps";
 import { useRegistration } from "../queries/register";
 import * as WebBrowser from "expo-web-browser";
-import Area from "../components/area";
 import { decodeParam, param } from "../routes";
 
 function friday() {
@@ -53,10 +59,13 @@ export default function EventScreen() {
 
   if (!serialized)
     return (
-      <View style={styles.container}>
+      <Box className="flex-1 bg-background">
         <Stack.Screen options={{ title: param(params.title) }} />
-        <Text>Deze activiteit kon niet geladen worden</Text>
-      </View>
+        <Placeholder
+          icon="calendar-remove"
+          empty="Deze activiteit kon niet geladen worden"
+        />
+      </Box>
     );
 
   return (
@@ -149,64 +158,90 @@ function EventDetails({ event, title }: { event: VEvent; title: string }) {
   }
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <Stack.Screen options={{ title }} />
-        {event.geo && (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: parseFloat(event.geo.split(";")[0]),
-              longitude: parseFloat(event.geo.split(";")[1]),
-              latitudeDelta: 0.0051,
-              longitudeDelta: 0.0051,
-            }}
-          >
-            <Marker
-              coordinate={{
-                latitude: parseFloat(event.geo.split(";")[0]),
-                longitude: parseFloat(event.geo.split(";")[1]),
-              }}
-              title={event.location}
-            />
-          </MapView>
-        )}
-        {isEvent() && (
-          <Button
-            mode={"contained"}
-            onPress={() =>
-              WebBrowser.openBrowserAsync("https://events.djoamersfoort.nl")
-            }
-          >
-            Meld je aan
-          </Button>
-        )}
-        {allowsRegister() && (
-          <Button onPress={register} mode={"contained"}>
-            Aanmelden voor aankomende{" "}
-            {event.timeStart.toLocaleDateString("nl-NL", { weekday: "long" })}
-          </Button>
-        )}
-        {getDescription() && (
-          <Area title={"Beschrijving"} icon={"information"}>
-            <Text>{getDescription()}</Text>
-          </Area>
-        )}
-        <Area title={"Wanneer"} icon={"calendar"}>
-          <Text>{getDates()}</Text>
-        </Area>
-      </View>
-    </ScrollView>
+    <Box className="flex-1 bg-background">
+      <Stack.Screen options={{ title }} />
+      <ScrollView>
+        <VStack className="gap-3 p-4 pb-8">
+          {event.geo && (
+            <Box className="aspect-square w-full overflow-hidden rounded-2xl">
+              <MapView
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: parseFloat(event.geo.split(";")[0]),
+                  longitude: parseFloat(event.geo.split(";")[1]),
+                  latitudeDelta: 0.0051,
+                  longitudeDelta: 0.0051,
+                }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: parseFloat(event.geo.split(";")[0]),
+                    longitude: parseFloat(event.geo.split(";")[1]),
+                  }}
+                  title={event.location}
+                />
+              </MapView>
+            </Box>
+          )}
+
+          <Heading size="xl" className="text-foreground">
+            {event.summary || title}
+          </Heading>
+
+          {isEvent() && (
+            <Button
+              variant="secondary"
+              onPress={() =>
+                WebBrowser.openBrowserAsync("https://events.djoamersfoort.nl")
+              }
+              className="rounded-xl"
+            >
+              <ButtonText>Meld je aan</ButtonText>
+            </Button>
+          )}
+
+          {allowsRegister() && (
+            <Button onPress={register} className="rounded-xl">
+              <ButtonText>
+                Aanmelden voor aankomende{" "}
+                {event.timeStart.toLocaleDateString("nl-NL", {
+                  weekday: "long",
+                })}
+              </ButtonText>
+            </Button>
+          )}
+
+          <VStack className="gap-2 rounded-2xl border border-border bg-card p-4">
+            <HStack className="items-center gap-2">
+              <Icon name="calendar" size={16} className="text-primary" />
+              <Text
+                size="xs"
+                className="uppercase tracking-wide text-muted-foreground"
+              >
+                Wanneer
+              </Text>
+            </HStack>
+            <Text className="text-foreground">{getDates()}</Text>
+          </VStack>
+
+          {!!getDescription() && (
+            <VStack className="gap-2 rounded-2xl border border-border bg-card p-4">
+              <HStack className="items-center gap-2">
+                <Icon name="information" size={16} className="text-primary" />
+                <Text
+                  size="xs"
+                  className="uppercase tracking-wide text-muted-foreground"
+                >
+                  Beschrijving
+                </Text>
+              </HStack>
+              <Text className="leading-relaxed text-foreground">
+                {getDescription()}
+              </Text>
+            </VStack>
+          )}
+        </VStack>
+      </ScrollView>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    gap: 10,
-  },
-  map: {
-    aspectRatio: 1,
-    borderRadius: 10,
-  },
-});
