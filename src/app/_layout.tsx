@@ -7,20 +7,20 @@ import {
   ThemeProvider,
 } from "expo-router";
 import { decode, encode } from "base-64";
-import * as Notifications from "expo-notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/auth";
 import SessionProvider from "@/components/session";
 import ReloadProvider from "@/components/register/reload-provider";
 import CustomNavigationBar from "@/components/navbar";
 import { queryClient, subscribeToAppState } from "@/api/query";
+import Notifications from "@/notifications";
 import { theme } from "@/theme";
 import "@/logging";
 
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: false,

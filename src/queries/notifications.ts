@@ -2,11 +2,11 @@ import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { LEDEN_ADMIN } from "../env";
 import { requestVoid } from "../api/client";
 import { Authed, useAuth, useTokenProvider } from "../auth";
+import Notifications from "../notifications";
 import logging from "../logging";
 
 /**
@@ -24,6 +24,8 @@ export function usePushRegistration() {
   const { mutate } = useMutation({
     mutationFn: async () => {
       if (!token) return;
+      // Expo Go on Android has no notifications module to register against.
+      if (!Notifications) return;
 
       if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("default", {

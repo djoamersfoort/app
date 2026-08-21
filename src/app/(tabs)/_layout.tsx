@@ -25,9 +25,7 @@ export default function TabsLayout() {
   const tutor = authenticated && auth.user.account_type.includes("begeleider");
 
   return (
-    // The native tab bar cannot read CSS variables, so the brand tint is passed
-    // through explicitly.
-    <NativeTabs tintColor={colors.primary}>
+    <NativeTabs tintColor={colors.primary} labelVisibilityMode={"labeled"}>
       <Trigger name={"index"}>
         <Icon
           sf={"house.fill"}
