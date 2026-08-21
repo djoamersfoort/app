@@ -1,35 +1,59 @@
-import { AlbumList } from "../../__generated__/media";
-import { Image, StyleSheet, TouchableOpacity } from "react-native";
-import { Text } from "react-native-paper";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { StackParamList } from "../../../App";
+import { useRouter } from "expo-router";
+import { AlbumList } from "@/__generated__/media";
+import { VStack } from "@/components/ui/vstack";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { Image } from "@/components/ui/image";
+import { Pressable } from "@/components/ui/pressable";
+import Icon from "../icon";
 
-type NavigationProps = NavigationProp<StackParamList>;
-
-export default function Preview({ album }: { album: AlbumList }) {
-  const navigation = useNavigation<NavigationProps>();
-
-  function navigate() {
-    navigation.navigate("Album", { album: album.id, title: album.name });
-  }
+/** An album tile. Width is left to the caller so it works in a row and a grid. */
+export default function Preview({
+  album,
+  className,
+}: {
+  album: AlbumList;
+  className?: string;
+}) {
+  const router = useRouter();
 
   return (
-    <TouchableOpacity style={styles.container} onPress={navigate}>
-      <Image source={{ uri: album.preview?.cover_path }} style={styles.image} />
-      <Text variant={"titleSmall"}>{album.name}</Text>
-    </TouchableOpacity>
+    <Pressable
+      className={`active:opacity-70 ${className ?? ""}`}
+      onPress={() =>
+        router.push({
+          pathname: "/album/[album]",
+          params: { album: album.id, title: album.name },
+        })
+      }
+    >
+      <VStack className="gap-2">
+        <Box className="aspect-square w-full overflow-hidden rounded-2xl bg-secondary">
+          {album.preview?.cover_path ? (
+            <Image
+              source={{ uri: album.preview.cover_path }}
+              alt={album.name}
+              className="h-full w-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <Box className="h-full w-full items-center justify-center">
+              <Icon
+                name="image-off-outline"
+                size={26}
+                className="text-muted-foreground"
+              />
+            </Box>
+          )}
+        </Box>
+        <Text
+          size="sm"
+          numberOfLines={1}
+          className="font-medium text-foreground"
+        >
+          {album.name}
+        </Text>
+      </VStack>
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1 / 2,
-    margin: 5,
-    gap: 5,
-  },
-  image: {
-    aspectRatio: 1,
-    borderRadius: 10,
-    backgroundColor: "lightgrey",
-  },
-});

@@ -1,74 +1,39 @@
-import {
-  Presence as PresenceType,
-  Slot,
-  slotsAtom,
-} from "../../stores/register";
-import { Icon, Switch, Text } from "react-native-paper";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { useContext, useState } from "react";
-import AuthContext, { Authed } from "../../auth";
-import { useAtom } from "jotai";
-import { AANMELDEN } from "../../env";
+import { Text } from "@/components/ui/text";
+import { Switch } from "@/components/ui/switch";
+import { Badge, BadgeText } from "@/components/ui/badge";
+import { Pressable } from "@/components/ui/pressable";
+import { Presence as PresenceType, useMarkSeen } from "@/queries/register";
 
-export default function Presence({
-  presence,
-  slot,
-}: {
-  presence: PresenceType;
-  slot: Slot;
-}) {
-  const [slots, setSlots] = useAtom(slotsAtom);
-  const [seen, setSeen] = useState(presence.seen);
-  const authState = useContext(AuthContext);
+export default function Presence({ presence }: { presence: PresenceType }) {
+  const markSeen = useMarkSeen();
 
-  async function markSeen() {
-    if (authState.authenticated !== Authed.AUTHENTICATED) return;
-    if (!slots) return;
-
-    presence.seen = !presence.seen;
-    setSeen(presence.seen);
-    setSlots(slots);
-
-    const token = await authState.token;
-    await fetch(
-      `${AANMELDEN}/api/v1/seen/${presence.id}/${presence.seen ? "true" : "false"}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
-    );
-  }
+  // The switch flips immediately through the optimistic cache update and rolls
+  // back on failure, so no local copy of `seen` is needed here.
+  const toggle = () => markSeen.mutate({ presence, seen: !presence.seen });
 
   return (
-    <TouchableOpacity style={styles.presence} onPress={markSeen}>
-      <Switch value={seen} onChange={markSeen} />
-      <Text>{presence.name}</Text>
+    <Pressable
+      onPress={toggle}
+      className="flex-row items-center gap-3 rounded-xl px-1 py-1.5 active:opacity-70"
+    >
+      <Switch value={presence.seen} onValueChange={toggle} />
+      <Text
+        numberOfLines={1}
+        className={
+          presence.seen
+            ? "flex-1 text-foreground"
+            : "flex-1 text-muted-foreground"
+        }
+      >
+        {presence.name}
+      </Text>
       {!!presence.stripcard_count && (
-        <View style={styles.stripcard}>
-          <Icon size={22} source={"clipboard-list"} />
-          <Text>
+        <Badge variant="secondary" className="rounded-full">
+          <BadgeText className="normal-case">
             {presence.stripcard_used} / {presence.stripcard_count}
-          </Text>
-        </View>
+          </BadgeText>
+        </Badge>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  presence: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  stripcard: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: 5,
-  },
-});
