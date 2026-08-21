@@ -12,7 +12,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "1",
+      "buildNumber": "2",
       "userInterfaceStyle": "automatic",
       "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
