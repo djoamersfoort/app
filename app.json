@@ -4,7 +4,7 @@
     "slug": "djo",
     "owner": "de-jonge-onderzoekers-amersfoort",
     "scheme": "djo",
-    "version": "1.8.2",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -40,7 +40,7 @@
         }
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 27
+      "versionCode": 28
     },
     "web": {
       "favicon": "./assets/favicon.png"
