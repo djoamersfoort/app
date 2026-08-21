@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Center } from "@/components/ui/center";
 import { useAlbum, useUploadItems } from "@/queries/media";
 import { HeaderIconButton, Placeholder } from "@/components/screen";
+import RowFillers from "@/components/grid";
 import { param } from "@/routes";
 
 export default function AlbumScreen() {
@@ -117,22 +118,25 @@ export default function AlbumScreen() {
         contentContainerStyle={{ gap: 3, padding: 3 }}
         columnWrapperStyle={{ gap: 3 }}
         renderItem={({ item, index }) => (
-          <Pressable
-            className="aspect-square flex-1 overflow-hidden rounded-lg active:opacity-70"
-            onPress={() =>
-              router.push({
-                pathname: "/slides",
-                params: { album: album.id, index },
-              })
-            }
-          >
-            <Image
-              source={{ uri: item.cover_path }}
-              alt=""
-              className="h-full w-full"
-              resizeMode="cover"
-            />
-          </Pressable>
+          <>
+            <Pressable
+              className="aspect-square flex-1 overflow-hidden rounded-lg active:opacity-70"
+              onPress={() =>
+                router.push({
+                  pathname: "/slides",
+                  params: { album: album.id, index },
+                })
+              }
+            >
+              <Image
+                source={{ uri: item.cover_path }}
+                alt=""
+                className="h-full w-full"
+                resizeMode="cover"
+              />
+            </Pressable>
+            <RowFillers index={index} total={album.items.length} columns={3} />
+          </>
         )}
         ListEmptyComponent={
           <Center className="py-16">

@@ -3,6 +3,7 @@ import { Box } from "@/components/ui/box";
 import Preview from "@/components/media/preview";
 import { useAlbums } from "@/queries/media";
 import { Placeholder, ScreenHeader, useTabBarInset } from "@/components/screen";
+import RowFillers from "@/components/grid";
 
 export default function MediaScreen() {
   // Refetches automatically when the app regains focus, so no manual
@@ -32,7 +33,12 @@ export default function MediaScreen() {
             paddingBottom: tabBarInset,
             paddingTop: 24,
           }}
-          renderItem={({ item }) => <Preview album={item} className="flex-1" />}
+          renderItem={({ item, index }) => (
+            <>
+              <Preview album={item} className="flex-1" />
+              <RowFillers index={index} total={albums.length} columns={2} />
+            </>
+          )}
           ListEmptyComponent={
             <Placeholder
               icon="image-off-outline"
