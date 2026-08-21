@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import PagerView from "react-native-pager-view";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useIsFocused,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
@@ -25,6 +30,35 @@ import {
 import { HeaderIconButton, Placeholder } from "@/components/screen";
 import { numberParam, param } from "@/routes";
 
+/**
+ * A single video page.
+ *
+ * The player gets its own component so the hook runs unconditionally: calling
+ * `useVideoPlayer` from inside the pager's `map` added a hook the moment a
+ * video scrolled into range, which crashed the screen. Playback follows
+ * `active`, so swiping to the next item or leaving the screen stops the video
+ * instead of leaving it playing in the background.
+ */
+function VideoSlide({ uri, active }: { uri: string; active: boolean }) {
+  const player = useVideoPlayer(uri);
+
+  useEffect(() => {
+    if (active) player.play();
+    else player.pause();
+  }, [active, player]);
+
+  // `allowsFullscreen` was replaced by `fullscreenOptions` in expo-video, so
+  // the old prop was silently doing nothing.
+  return (
+    <VideoView
+      style={styles.image}
+      player={player}
+      contentFit="contain"
+      fullscreenOptions={{ enable: true }}
+    />
+  );
+}
+
 export default function SlidesScreen() {
   const params = useLocalSearchParams<{ album?: string; index?: string }>();
   const album = param(params.album);
@@ -32,6 +66,9 @@ export default function SlidesScreen() {
   const [page, setPage] = useState(() => numberParam(params.index, 0));
   const [deleteVisible, setDeleteVisible] = useState(false);
   const router = useRouter();
+  // Playback is tied to focus as well as to the page, so pushing another
+  // screen on top silences the video rather than letting it play on unseen.
+  const focused = useIsFocused();
 
   // The item list is read from the album query rather than passed through the
   // route, so a long album does not end up serialised into navigation state.
@@ -112,17 +149,14 @@ export default function SlidesScreen() {
         onPageSelected={(event) => setPage(event.nativeEvent.position)}
       >
         {items.map((item, index) => (
-          <View key={index}>
+          <View key={item.id}>
             {inRange(page, index, 1) &&
               (item.type === 1 ? (
                 <Image style={styles.image} source={{ uri: item.path }} />
               ) : (
-                <VideoView
-                  style={styles.image}
-                  player={useVideoPlayer(item.path, (video) => {
-                    video.play();
-                  })}
-                  allowsFullscreen={true}
+                <VideoSlide
+                  uri={item.path}
+                  active={focused && page === index}
                 />
               ))}
           </View>

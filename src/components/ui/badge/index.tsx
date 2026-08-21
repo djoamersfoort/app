@@ -14,7 +14,9 @@ import { Svg } from "react-native-svg";
 const SCOPE = "BADGE";
 
 const badgeStyle = tva({
-  base: "flex-row items-center justify-center rounded-sm px-2 py-0.5",
+  // Chips are read at arm's length on a phone, so they carry a bit more
+  // padding and a legible label rather than the web-scale 12px default.
+  base: "flex-row items-center justify-center rounded-sm px-2.5 py-1",
   variants: {
     variant: {
       default: "bg-primary",
@@ -26,7 +28,7 @@ const badgeStyle = tva({
 });
 
 const badgeTextStyle = tva({
-  base: "text-xs font-medium tracking-normal uppercase",
+  base: "text-sm font-medium tracking-normal uppercase",
   parentVariants: {
     variant: {
       default: "text-primary-foreground",
@@ -38,7 +40,7 @@ const badgeTextStyle = tva({
 });
 
 const badgeIconStyle = tva({
-  base: "fill-none h-3 w-3 pointer-events-none",
+  base: "fill-none h-3.5 w-3.5 pointer-events-none",
   parentVariants: {
     variant: {
       default: "text-primary-foreground",

@@ -38,11 +38,13 @@ const buttonStyle = tva({
         "data-[hover=true]:bg-accent data-[active=true]:bg-accent dark:data-[hover=true]:bg-accent/50 dark:data-[active=true]:bg-accent/50",
       link: "text-primary underline-offset-4 data-[hover=true]:underline data-[active=true]:underline",
     },
+    // Sizes are tuned for touch: the smallest button still clears the 44pt
+    // minimum tap target, and `lg` is the full-width primary action.
     size: {
-      default: "px-4 py-2",
-      sm: "min-h-8 rounded-md px-3 text-xs",
-      lg: "min-h-10 rounded-md px-8",
-      icon: "min-h-9 min-w-9",
+      default: "min-h-11 px-4 py-2.5",
+      sm: "min-h-9 rounded-md px-3.5 py-2",
+      lg: "min-h-13 rounded-xl px-8 py-3",
+      icon: "min-h-11 min-w-11",
     },
   },
 });
@@ -59,10 +61,10 @@ const buttonTextStyle = tva({
       link: "text-primary data-[hover=true]:underline data-[active=true]:underline",
     },
     size: {
-      default: "text-sm",
-      sm: "text-xs",
-      lg: "text-sm",
-      icon: "text-sm",
+      default: "text-base",
+      sm: "text-sm",
+      lg: "text-lg font-medium",
+      icon: "text-base",
     },
   },
 });
@@ -93,10 +95,10 @@ const buttonIconStyle = tva({
       link: "text-primary",
     },
     size: {
-      default: "h-4 w-4",
-      sm: "h-3 w-3",
-      lg: "h-5 w-5",
-      icon: "h-4 w-4",
+      default: "h-5 w-5",
+      sm: "h-4 w-4",
+      lg: "h-6 w-6",
+      icon: "h-5 w-5",
     },
   },
 });

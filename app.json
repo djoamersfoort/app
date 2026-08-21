@@ -12,7 +12,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "2",
+      "buildNumber": "3",
       "userInterfaceStyle": "automatic",
       "supportsTablet": false,
       "bundleIdentifier": "nl.djoamersfoort.djo",
@@ -40,7 +40,7 @@
         }
       },
       "googleServicesFile": "./google-services.json",
-      "versionCode": 30
+      "versionCode": 31
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -13,6 +13,10 @@ export const theme = {
     foreground: "#0a0a0a",
     mutedForeground: "#737373",
     border: "#e5e5e5",
+    // Android press feedback. The native tab bar defaults to a fully opaque
+    // primary, which flashes hard on every tab switch; Material's ripple is a
+    // low-alpha tint instead.
+    ripple: "rgba(32, 32, 136, 0.12)",
   },
   dark: {
     primary: "#8d8df5",
@@ -21,5 +25,6 @@ export const theme = {
     foreground: "#fafafa",
     mutedForeground: "#a1a1a1",
     border: "#2e2e2e",
+    ripple: "rgba(141, 141, 245, 0.12)",
   },
 } as const;

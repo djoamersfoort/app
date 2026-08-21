@@ -25,7 +25,11 @@ export default function TabsLayout() {
   const tutor = authenticated && auth.user.account_type.includes("begeleider");
 
   return (
-    <NativeTabs tintColor={colors.primary} labelVisibilityMode={"labeled"}>
+    <NativeTabs
+      tintColor={colors.primary}
+      rippleColor={colors.ripple}
+      labelVisibilityMode={"labeled"}
+    >
       <Trigger name={"index"}>
         <Icon
           sf={"house.fill"}
